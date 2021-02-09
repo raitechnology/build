@@ -15,6 +15,9 @@
 /capr
 /natsmd
 /benchmark
+/openpgm
+/natsrv
+/raipgm
 # dist
 /dist
 /export
@@ -24,6 +27,7 @@
 /notes
 /data
 /tmp
+/links
 # Build temporaries
 /RH5_*
 /RH6_*
@@ -41,6 +45,8 @@
 # cache.xml files
 /*.xml*
 /*.txt
+/*.gnuplot
+/*.sh
 /*.dtd
 /*.json
 # environment settings
