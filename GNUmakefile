@@ -190,7 +190,7 @@ commit: dirs
 	if [ -n "`git -C natsrv status --porcelain`" ] ; then git -C natsrv commit -a ; fi
 
 .PHONY: clean
-clean:
+clean: dirs
 	rm -r -f openpgm
 	rm -r -f raikv
 	rm -r -f libdecnumber
