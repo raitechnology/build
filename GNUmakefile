@@ -20,6 +20,27 @@ build: links
 	make -C natsmd
 	make -C natsrv
 
+.PHONY: sync
+sync: links
+	rsync -auv --exclude='.*.sw*' openpgm/	      ${SYNC_DIR}/openpgm
+	rsync -auv --exclude='.*.sw*' raikv/	      ${SYNC_DIR}/raikv
+	rsync -auv --exclude='.*.sw*' libdecnumber/   ${SYNC_DIR}/libdecnumber
+	rsync -auv --exclude='.*.sw*' raimd/	      ${SYNC_DIR}/raimd
+	rsync -auv --exclude='.*.sw*' linecook/	      ${SYNC_DIR}/linecook
+	rsync -auv --exclude='.*.sw*' rdbparser/      ${SYNC_DIR}/rdbparser
+	rsync -auv --exclude='.*.sw*' h3/             ${SYNC_DIR}/h3
+	rsync -auv --exclude='.*.sw*' raist/          ${SYNC_DIR}/raist
+	rsync -auv --exclude='.*.sw*' HdrHistogram_c/ ${SYNC_DIR}/HdrHistogram_c
+	rsync -auv --exclude='.*.sw*' aeron/          ${SYNC_DIR}/aeron
+	rsync -auv --exclude='.*.sw*' aekv/           ${SYNC_DIR}/aekv
+	rsync -auv --exclude='.*.sw*' sassrv/         ${SYNC_DIR}/sassrv
+	rsync -auv --exclude='.*.sw*' aerv/           ${SYNC_DIR}/aerv
+	rsync -auv --exclude='.*.sw*' raids/          ${SYNC_DIR}/raids
+	rsync -auv --exclude='.*.sw*' capr/           ${SYNC_DIR}/capr
+	rsync -auv --exclude='.*.sw*' raipgm/         ${SYNC_DIR}/raipgm
+	rsync -auv --exclude='.*.sw*' natsmd/         ${SYNC_DIR}/natsmd
+	rsync -auv --exclude='.*.sw*' natsrv/         ${SYNC_DIR}/natsrv
+
 .PHONY: force_build
 force_build: links
 	make -C openpgm -B
