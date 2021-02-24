@@ -169,6 +169,7 @@ update_submodules: dirs
 	git -C raist update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
 	git -C sassrv update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
 	git -C sassrv update-index --cacheinfo 160000 `git -C raimd rev-parse HEAD` raimd
+	git -C sassrv update-index --cacheinfo 160000 `git -C HdrHistogram_c rev-parse rai` HdrHistogram_c
 
 .PHONY: bump
 bump: dirs
@@ -279,6 +280,8 @@ links:
 	ln -s -f ../raikv sassrv/raikv
 	rmdir sassrv/raimd
 	ln -s -f ../raimd sassrv/raimd
+	rmdir sassrv/HdrHistogram_c
+	ln -s -f ../HdrHistogram_c sassrv/HdrHistogram_c
 	rmdir raipgm/openpgm
 	ln -s -f ../openpgm raipgm/openpgm
 	rmdir raipgm/HdrHistogram_c
@@ -333,6 +336,8 @@ dirs:
 	mkdir sassrv/raikv
 	rm -f -d sassrv/raimd
 	mkdir sassrv/raimd
+	rm -f -d sassrv/HdrHistogram_c
+	mkdir sassrv/HdrHistogram_c
 	rm -f -d raipgm/openpgm
 	mkdir raipgm/openpgm
 	rm -f -d raipgm/HdrHistogram_c
