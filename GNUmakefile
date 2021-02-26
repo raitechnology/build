@@ -345,3 +345,6 @@ dirs:
 	rm -f -d links
 	touch dirs
 
+doc/index.html: doc/index.adoc
+	a2x -f xhtml doc/index.adoc
+

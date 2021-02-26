@@ -23,6 +23,7 @@
 /export
 /rpmbuild
 /dpkgbuild
+/*-x86_64
 # misc
 /notes
 /data

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Rai RPM Repository for RedHat Based Systems</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css" /><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot" /></head><body><div xml:lang="en" class="article" lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="idm46484934625312"></a>Rai RPM Repository for RedHat Based Systems</h2></div></div><hr /></div><div class="toc"><p><strong>Table of Contents</strong></p><dl class="toc"><dt><span class="section"><a href="#_about">1. About</a></span></dt><dt><span class="section"><a href="#_installing">2. Installing</a></span></dt><dt><span class="section"><a href="#_example">3. Example</a></span></dt><dt><span class="section"><a href="#_description">4. Description</a></span></dt></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_about"></a>1. About</h2></div></div></div><p>The open source caching and distribution components that are designed by Rai
+are built for RPM based software installation and are stored in this repo.
+There is at least one package
+(<a class="ulink" href="http://oldhome.schmorp.de/marc/liblzf.html" target="_top">liblzf</a>) that lives in the
+<a class="ulink" href="https://fedoraproject.org/wiki/EPEL" target="_top">EPEL repo</a>, so that may also be needed
+for RedHat Enterprise / CentOS based distributions.</p><p>The RPM files here are built from their github clones.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+<a class="ulink" href="https://github.com/raitechnology/raikv" target="_top">Rai KV</a>, a shared memory key
+  value store (package: raikv)
+</li><li class="listitem">
+<a class="ulink" href="https://github.com/raitechnology/raids" target="_top">Rai DS</a>, distribution services,
+  including Redis, Memcached, Http, WebSocket, DS API (package: raids)
+</li><li class="listitem">
+<a class="ulink" href="https://github.com/raitechnology/raimd" target="_top">Rai MD</a>, market data codecs,
+  including TIB/SASS, Marketfeed, RV, RWF, Json, Dictinaries (package: raimd)
+</li><li class="listitem">
+<a class="ulink" href="https://github.com/raitechnology/natsmd" target="_top">NATS MD</a>, NATS protocol bridge
+  (package: natsmd)
+</li><li class="listitem">
+<a class="ulink" href="https://github.com/raitechnology/natsrv" target="_top">NATS RV</a>, RV to NATS protocol
+  bridge (package: natsrv)
+</li><li class="listitem">
+other packages that are dependencies of the above, the <code class="literal">git submodule</code>
+facility links the package within the git source trees on github.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_installing"></a>2. Installing</h2></div></div></div><p>Download one of the following repo files and install it to <code class="literal">/etc/yum.repos.d/</code>.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+CentOS 7 / RHEL 7, <a class="ulink" href="raitechnology_epel-7-x86_64.repo" target="_top">raitechnology_epel-7-x86_64.repo</a>
+</li><li class="listitem">
+CentOS 8 / RHEL 8, <a class="ulink" href="raitechnology_epel-8-x86_64.repo" target="_top">raitechnology_epel-8-x86_64.repo</a>
+</li><li class="listitem">
+Fedora 32, <a class="ulink" href="raitechnology_fedora-32-x86_64.repo" target="_top">raitechnology_fedora-32-x86_64.repo</a>
+</li><li class="listitem">
+Fedora 33, <a class="ulink" href="raitechnology_fedora-33-x86_64.repo" target="_top">raitechnology_fedora-33-x86_64.repo</a>
+</li><li class="listitem">
+Fedora 34, <a class="ulink" href="raitechnology_fedora-34-x86_64.repo" target="_top">raitechnology_fedora-34-x86_64.repo</a>
+</li></ul></div><p>Then use <code class="literal">yum</code> or <code class="literal">dnf</code> to install packages.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_example"></a>3. Example</h2></div></div></div><p>This example uses <code class="literal">curl</code> to install, then <code class="literal">yum</code> to install the raids package
+which has several dependencies.  These are resolved, then the GPG public key
+used to verify the RPMs, is imported by <code class="literal">yum</code>.</p><pre class="screen">$ sudo curl -s https://www.raitechnology.com/repo/raitechnology_epel-7-x86_64.repo -o \
+/etc/yum.repos.d/raitechnology_epel-7-x86_64.repo
+
+$ sudo yum install raids
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirror.sfo12.us.leaseweb.net
+ * epel: sjc.edge.kernel.org
+ * extras: mirror.sfo12.us.leaseweb.net
+ * updates: mirror.hostduplex.com
+Resolving Dependencies
+--&gt; Running transaction check
+---&gt; Package raids.x86_64 0:1.2.0-40.el7 will be installed
+--&gt; Processing Dependency: h3 for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: liblzf for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: raikv for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: raimd for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: rdbparser for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: libh3.so.3.6()(64bit) for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: liblzf.so.1()(64bit) for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: libraikv.so.1.9()(64bit) for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: libraimd.so.1.2()(64bit) for package: raids-1.2.0-40.el7.x86_64
+--&gt; Processing Dependency: librdbparser.so.1.0()(64bit) for package: raids-1.2.0-40.el7.x86_64
+--&gt; Running transaction check
+---&gt; Package h3.x86_64 0:3.6.3-5.el7 will be installed
+---&gt; Package liblzf.x86_64 0:3.6-7.el7 will be installed
+---&gt; Package raikv.x86_64 0:1.9.0-73.el7 will be installed
+---&gt; Package raimd.x86_64 0:1.2.0-17.el7 will be installed
+---&gt; Package rdbparser.x86_64 0:1.0.0-3.el7 will be installed
+--&gt; Finished Dependency Resolution
+
+Dependencies Resolved
+
+============================================================================
+ Package           Arch        Version           Repository         Size
+============================================================================
+Installing:
+ raids             x86_64      1.2.0-40.el7      raitechnology      893 k
+Installing for dependencies:
+ h3                x86_64      3.6.3-5.el7       raitechnology      61 k
+ liblzf            x86_64      3.6-7.el7         epel               22 k
+ raikv             x86_64      1.9.0-73.el7      raitechnology      475 k
+ raimd             x86_64      1.2.0-17.el7      raitechnology      196 k
+ rdbparser         x86_64      1.0.0-3.el7       raitechnology      55 k
+
+Transaction Summary
+============================================================================
+Install  1 Package (+5 Dependent packages)
+
+Total download size: 1.7 M
+Installed size: 16 M
+Is this ok [y/d/N]: y
+Downloading packages:
+(1/6): h3-3.6.3-5.el7.x86_64.rpm                          |  61 kB  00:00:00
+(2/6): raikv-1.9.0-73.el7.x86_64.rpm                      | 475 kB  00:00:00
+(3/6): raimd-1.2.0-17.el7.x86_64.rpm                      | 196 kB  00:00:00
+(4/6): rdbparser-1.0.0-3.el7.x86_64.rpm                   |  55 kB  00:00:00
+(5/6): liblzf-3.6-7.el7.x86_64.rpm                        |  22 kB  00:00:00
+(6/6): raids-1.2.0-40.el7.x86_64.rpm                      | 893 kB  00:00:00
+ ---------------------------------------------------------------------------
+Total                                                                                                                      6.6 MB/s | 1.7 MB  00:00:00
+Retrieving key from https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology
+Importing GPG key 0x7110B2D1:
+ Userid     : "Rai Technology &lt;chris@raitechnology.com&gt;"
+ Fingerprint: a2cc b37e 25e7 0d29 cd92 8b9f 532d f184 7110 b2d1
+ From       : https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology
+Is this ok [y/N]: y
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+Warning: RPMDB altered outside of yum.
+  Installing : liblzf-3.6-7.el7.x86_64                    1/6
+  Installing : rdbparser-1.0.0-3.el7.x86_64               2/6
+  Installing : h3-3.6.3-5.el7.x86_64                      3/6
+  Installing : raimd-1.2.0-17.el7.x86_64                  4/6
+  Installing : raikv-1.9.0-73.el7.x86_64                  5/6
+  Installing : raids-1.2.0-40.el7.x86_64                  6/6
+  Verifying  : raikv-1.9.0-73.el7.x86_64                  1/6
+  Verifying  : raimd-1.2.0-17.el7.x86_64                  2/6
+  Verifying  : raids-1.2.0-40.el7.x86_64                  3/6
+  Verifying  : liblzf-3.6-7.el7.x86_64                    4/6
+  Verifying  : rdbparser-1.0.0-3.el7.x86_64               5/6
+  Verifying  : h3-3.6.3-5.el7.x86_64                      6/6
+
+Installed:
+  raids.x86_64 0:1.2.0-40.el7
+
+Dependency Installed:
+  h3.x86_64 0:3.6.3-5.el7        liblzf.x86_64 0:3.6-7.el7
+  raikv.x86_64 0:1.9.0-73.el7    raimd.x86_64 0:1.2.0-17.el7
+  rdbparser.x86_64 0:1.0.0-3.el7
+
+Complete!</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_description"></a>4. Description</h2></div></div></div><p>The RPM installers, <span class="strong"><strong>yum</strong></span> or <span class="strong"><strong>dnf</strong></span> can be used when the repo file is
+installed.  This file usually lives in a well known directory
+<code class="literal">/etc/yum.repos.d/raitechnology_epel-7-x86_64.repo</code> and needs two links:</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p class="simpara">
+The RPM directory contains the rpm files:
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+<a class="ulink" href="epel-7-x86_64" target="_top">epel-7-x86_64</a> — CentOS 7 / RHEL 7
+</li><li class="listitem">
+<a class="ulink" href="epel-8-x86_64" target="_top">epel-8-x86_64</a> — CentOS 8 / RHEL 8
+</li><li class="listitem">
+<a class="ulink" href="fedora-32-x86_64" target="_top">fedora-32-x86_64</a> — Fedora 32
+</li><li class="listitem">
+<a class="ulink" href="fedora-33-x86_64" target="_top">fedora-32-x86_64</a> — Fedora 33
+</li><li class="listitem">
+<a class="ulink" href="fedora-34-x86_64" target="_top">fedora-32-x86_64</a> — Fedora 34
+</li></ul></div></li><li class="listitem"><p class="simpara">
+The GPG public key used to verify the package file:
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+<a class="ulink" href="RPM-GPG-KEY-raitechnology" target="_top">RPM-GPG-KEY-raitechnology</a>
+</li></ul></div></li></ol></div><p>The contents of the repo file contains these links, and looks like this:</p><pre class="screen">[raitechnology]
+name=Rai Technology epel-7-x86_64
+baseurl=https://www.raitechnology.com/repo/epel-7-x86_64
+enabled=1
+gpgcheck=1
+gpgkey=https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology</pre><p>When this file is enabled, yum/dnf will be able to resolve the dependencies
+required for installing any of the packages.</p></div></div></body></html>
