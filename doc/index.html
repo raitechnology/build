@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Rai RPM Repository for RedHat Based Systems</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css" /><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot" /></head><body><div xml:lang="en" class="article" lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="idm46484934625312"></a>Rai RPM Repository for RedHat Based Systems</h2></div></div><hr /></div><div class="toc"><p><strong>Table of Contents</strong></p><dl class="toc"><dt><span class="section"><a href="#_about">1. About</a></span></dt><dt><span class="section"><a href="#_installing">2. Installing</a></span></dt><dt><span class="section"><a href="#_example">3. Example</a></span></dt><dt><span class="section"><a href="#_description">4. Description</a></span></dt></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_about"></a>1. About</h2></div></div></div><p>The open source caching and distribution components that are designed by Rai
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Rai RPM Repository for RedHat Based Systems</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css" /><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot" /></head><body><div xml:lang="en" class="article" lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="idm46103413806768"></a>Rai RPM Repository for RedHat Based Systems</h2></div></div><hr /></div><div class="toc"><p><strong>Table of Contents</strong></p><dl class="toc"><dt><span class="section"><a href="#_about">1. About</a></span></dt><dt><span class="section"><a href="#_installing">2. Installing</a></span></dt><dt><span class="section"><a href="#_example">3. Example</a></span></dt><dt><span class="section"><a href="#_description">4. Description</a></span></dt></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_about"></a>1. About</h2></div></div></div><p>The open source caching and distribution components that are designed by Rai
 are built for RPM based software installation and are stored in this repo.
 There is at least one package
 (<a class="ulink" href="http://oldhome.schmorp.de/marc/liblzf.html" target="_top">liblzf</a>) that lives in the
@@ -19,6 +19,9 @@ for RedHat Enterprise / CentOS based distributions.</p><p>The RPM files here are
 </li><li class="listitem">
 <a class="ulink" href="https://github.com/raitechnology/natsrv" target="_top">NATS RV</a>, RV to NATS protocol
   bridge (package: natsrv)
+</li><li class="listitem">
+<a class="ulink" href="https://github.com/raitechnology/natsrv" target="_top">SASS RV</a>, RV protocol bridge
+  (package: sassrv)
 </li><li class="listitem">
 other packages that are dependencies of the above, the <code class="literal">git submodule</code>
 facility links the package within the git source trees on github.
@@ -94,7 +97,7 @@ Downloading packages:
 (5/6): liblzf-3.6-7.el7.x86_64.rpm                        |  22 kB  00:00:00
 (6/6): raids-1.2.0-40.el7.x86_64.rpm                      | 893 kB  00:00:00
  ---------------------------------------------------------------------------
-Total                                                                                                                      6.6 MB/s | 1.7 MB  00:00:00
+Total                                            6.6 MB/s | 1.7 MB  00:00:00
 Retrieving key from https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology
 Importing GPG key 0x7110B2D1:
  Userid     : "Rai Technology &lt;chris@raitechnology.com&gt;"

@@ -40,27 +40,7 @@ sync: links
 	rsync -auv --exclude='.*.sw*' raipgm/         ${SYNC_DIR}/raipgm
 	rsync -auv --exclude='.*.sw*' natsmd/         ${SYNC_DIR}/natsmd
 	rsync -auv --exclude='.*.sw*' natsrv/         ${SYNC_DIR}/natsrv
-
-.PHONY: force_build
-force_build: links
-	make -C openpgm -B
-	make -C raikv -B
-	make -C libdecnumber -B
-	make -C raimd -B
-	make -C linecook -B
-	make -C rdbparser -B
-	make -C h3 -B
-	make -C raist -B
-	make -C HdrHistogram_c -B
-	make -C aeron -B
-	make -C aekv -B
-	make -C sassrv -B
-	make -C aerv -B
-	make -C raids -B
-	make -C capr -B
-	make -C raipgm -B
-	make -C natsmd -B
-	make -C natsrv -B
+	rsync -auv --exclude='.*.sw*' benchmark/      ${SYNC_DIR}/benchmark
 
 .PHONY: clone
 clone:
@@ -86,130 +66,134 @@ clone:
 
 .PHONY: push
 push: dirs
-	git -C openpgm push origin
-	git -C raikv push origin
-	git -C libdecnumber push origin
-	git -C raimd push origin
-	git -C linecook push origin
-	git -C rdbparser push origin
-	git -C h3 push origin
-	git -C raist push origin
-	git -C aeron push origin
-	git -C aekv push origin
-	git -C sassrv push origin
-	git -C aerv push origin
-	git -C raids push origin
-	git -C capr push origin
-	git -C raipgm push origin
-	git -C natsmd push origin
-	git -C natsrv push origin
+	(cd openpgm && git push origin)
+	(cd raikv && git push origin)
+	(cd libdecnumber && git push origin)
+	(cd raimd && git push origin)
+	(cd linecook && git push origin)
+	(cd rdbparser && git push origin)
+	(cd h3 && git push origin)
+	(cd raist && git push origin)
+	(cd HdrHistogram_c && git push origin)
+	(cd aeron && git push origin)
+	(cd aekv && git push origin)
+	(cd sassrv && git push origin)
+	(cd aerv && git push origin)
+	(cd raids && git push origin)
+	(cd capr && git push origin)
+	(cd raipgm && git push origin)
+	(cd natsmd && git push origin)
+	(cd natsrv && git push origin)
 
 .PHONY: pull
 pull: dirs
-	git -C openpgm pull origin
-	git -C raikv pull origin
-	git -C libdecnumber pull origin
-	git -C raimd pull origin
-	git -C linecook pull origin
-	git -C rdbparser pull origin
-	git -C h3 pull origin
-	git -C raist pull origin
-	git -C aeron pull origin
-	git -C aekv pull origin
-	git -C sassrv pull origin
-	git -C aerv pull origin
-	git -C raids pull origin
-	git -C capr pull origin
-	git -C raipgm pull origin
-	git -C natsmd pull origin
-	git -C natsrv pull origin
+	(cd openpgm && git pull origin)
+	(cd raikv && git pull origin)
+	(cd libdecnumber && git pull origin)
+	(cd raimd && git pull origin)
+	(cd linecook && git pull origin)
+	(cd rdbparser && git pull origin)
+	(cd h3 && git pull origin)
+	(cd raist && git pull origin)
+	(cd HdrHistogram_c && git pull origin)
+	(cd aeron && git pull origin)
+	(cd aekv && git pull origin)
+	(cd sassrv && git pull origin)
+	(cd aerv && git pull origin)
+	(cd raids && git pull origin)
+	(cd capr && git pull origin)
+	(cd raipgm && git pull origin)
+	(cd natsmd && git pull origin)
+	(cd natsrv && git pull origin)
 
 .PHONY: status
 status: dirs
-	@if [ -n "`git -C openpgm status --porcelain`" ] ; then echo "---> openpgm <---"; git -C openpgm status ; fi
-	@if [ -n "`git -C raikv status --porcelain`" ] ; then echo "---> raikv <---"; git -C raikv status ; fi
-	@if [ -n "`git -C libdecnumber status --porcelain`" ] ; then echo "---> libdecnumber <---"; git -C libdecnumber status ; fi
-	@if [ -n "`git -C raimd status --porcelain`" ] ; then echo "---> raimd <---"; git -C raimd status ; fi
-	@if [ -n "`git -C linecook status --porcelain`" ] ; then echo "---> linecook <---"; git -C linecook status ; fi
-	@if [ -n "`git -C rdbparser status --porcelain`" ] ; then echo "---> rdbparser <---"; git -C rdbparser status ; fi
-	@if [ -n "`git -C h3 status --porcelain`" ] ; then echo "---> h3 <---"; git -C h3 status ; fi
-	@if [ -n "`git -C raist status --porcelain`" ] ; then echo "---> raist <---"; git -C raist status ; fi
-	@if [ -n "`git -C aeron status --porcelain`" ] ; then echo "---> aeron <---"; git -C aeron status ; fi
-	@if [ -n "`git -C aekv status --porcelain`" ] ; then echo "---> aekv <---"; git -C aekv status ; fi
-	@if [ -n "`git -C sassrv status --porcelain`" ] ; then echo "---> sassrv <---"; git -C sassrv status ; fi
-	@if [ -n "`git -C aerv status --porcelain`" ] ; then echo "---> aerv <---"; git -C aerv status ; fi
-	@if [ -n "`git -C raids status --porcelain`" ] ; then echo "---> raids <---"; git -C raids status ; fi
-	@if [ -n "`git -C capr status --porcelain`" ] ; then echo "---> capr <---"; git -C capr status ; fi
-	@if [ -n "`git -C raipgm status --porcelain`" ] ; then echo "---> raipgm <---"; git -C raipgm status ; fi
-	@if [ -n "`git -C natsmd status --porcelain`" ] ; then echo "---> natsmd <---"; git -C natsmd status ; fi
-	@if [ -n "`git -C natsrv status --porcelain`" ] ; then echo "---> natsrv <---"; git -C natsrv status ; fi
+	@if [ -n "`cd openpgm && git status --porcelain`" ] ; then echo "---> openpgm <---"; cd openpgm && git status ; fi
+	@if [ -n "`cd raikv && git status --porcelain`" ] ; then echo "---> raikv <---"; cd raikv && git status ; fi
+	@if [ -n "`cd libdecnumber && git status --porcelain`" ] ; then echo "---> libdecnumber <---"; cd libdecnumber && git status ; fi
+	@if [ -n "`cd raimd && git status --porcelain`" ] ; then echo "---> raimd <---"; cd raimd && git status ; fi
+	@if [ -n "`cd linecook && git status --porcelain`" ] ; then echo "---> linecook <---"; cd linecook && git status ; fi
+	@if [ -n "`cd rdbparser && git status --porcelain`" ] ; then echo "---> rdbparser <---"; cd rdbparser && git status ; fi
+	@if [ -n "`cd h3 && git status --porcelain`" ] ; then echo "---> h3 <---"; cd h3 && git status ; fi
+	@if [ -n "`cd raist && git status --porcelain`" ] ; then echo "---> raist <---"; cd raist && git status ; fi
+	@if [ -n "`cd HdrHistogram_c && git status --porcelain`" ] ; then echo "---> HdrHistogram_c <---"; cd HdrHistogram_c && git status ; fi
+	@if [ -n "`cd aeron && git status --porcelain`" ] ; then echo "---> aeron <---"; cd aeron && git status ; fi
+	@if [ -n "`cd aekv && git status --porcelain`" ] ; then echo "---> aekv <---"; cd aekv && git status ; fi
+	@if [ -n "`cd sassrv && git status --porcelain`" ] ; then echo "---> sassrv <---"; cd sassrv && git status ; fi
+	@if [ -n "`cd aerv && git status --porcelain`" ] ; then echo "---> aerv <---"; cd aerv && git status ; fi
+	@if [ -n "`cd raids && git status --porcelain`" ] ; then echo "---> raids <---"; cd raids && git status ; fi
+	@if [ -n "`cd capr && git status --porcelain`" ] ; then echo "---> capr <---"; cd capr && git status ; fi
+	@if [ -n "`cd raipgm && git status --porcelain`" ] ; then echo "---> raipgm <---"; cd raipgm && git status ; fi
+	@if [ -n "`cd natsmd && git status --porcelain`" ] ; then echo "---> natsmd <---"; cd natsmd && git status ; fi
+	@if [ -n "`cd natsrv && git status --porcelain`" ] ; then echo "---> natsrv <---"; cd natsrv && git status ; fi
 
 .PHONY: update_submodules
 update_submodules: dirs
-	git -C aekv update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
-	git -C aekv update-index --cacheinfo 160000 `git -C aeron rev-parse rai` aeron
-	git -C aeron update-index --cacheinfo 160000 `git -C HdrHistogram_c rev-parse rai` HdrHistogram_c
-	git -C aerv update-index --cacheinfo 160000 `git -C sassrv rev-parse HEAD` sassrv
-	git -C aerv update-index --cacheinfo 160000 `git -C aekv rev-parse HEAD` aekv
-	git -C capr update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
-	git -C capr update-index --cacheinfo 160000 `git -C raimd rev-parse HEAD` raimd
-	git -C raipgm update-index --cacheinfo 160000 `git -C openpgm rev-parse rai` openpgm
-	git -C raipgm update-index --cacheinfo 160000 `git -C HdrHistogram_c rev-parse rai` HdrHistogram_c
-	git -C natsmd update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
-	git -C natsmd update-index --cacheinfo 160000 `git -C raimd rev-parse HEAD` raimd
-	git -C natsrv update-index --cacheinfo 160000 `git -C sassrv rev-parse HEAD` sassrv
-	git -C natsrv update-index --cacheinfo 160000 `git -C natsmd rev-parse HEAD` natsmd
-	git -C raids update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
-	git -C raids update-index --cacheinfo 160000 `git -C h3 rev-parse HEAD` h3
-	git -C raids update-index --cacheinfo 160000 `git -C linecook rev-parse HEAD` linecook
-	git -C raids update-index --cacheinfo 160000 `git -C raimd rev-parse HEAD` raimd
-	git -C raids update-index --cacheinfo 160000 `git -C rdbparser rev-parse HEAD` rdbparser
-	git -C raimd update-index --cacheinfo 160000 `git -C libdecnumber rev-parse HEAD` libdecnumber
-	git -C raist update-index --cacheinfo 160000 `git -C raimd rev-parse HEAD` raimd
-	git -C raist update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
-	git -C sassrv update-index --cacheinfo 160000 `git -C raikv rev-parse HEAD` raikv
-	git -C sassrv update-index --cacheinfo 160000 `git -C raimd rev-parse HEAD` raimd
-	git -C sassrv update-index --cacheinfo 160000 `git -C HdrHistogram_c rev-parse rai` HdrHistogram_c
+	(cd aekv && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
+	(cd aekv && git update-index --cacheinfo 160000 `cd ../aeron && git rev-parse rai` aeron)
+	(cd aeron && git update-index --cacheinfo 160000 `cd ../HdrHistogram_c && git rev-parse rai` HdrHistogram_c)
+	(cd aerv && git update-index --cacheinfo 160000 `cd ../sassrv && git rev-parse HEAD` sassrv)
+	(cd aerv && git update-index --cacheinfo 160000 `cd ../aekv && git rev-parse HEAD` aekv)
+	(cd capr && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
+	(cd capr && git update-index --cacheinfo 160000 `cd ../raimd && git rev-parse HEAD` raimd)
+	(cd raipgm && git update-index --cacheinfo 160000 `cd ../openpgm && git rev-parse rai` openpgm)
+	(cd raipgm && git update-index --cacheinfo 160000 `cd ../HdrHistogram_c && git rev-parse rai` HdrHistogram_c)
+	(cd natsmd && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
+	(cd natsmd && git update-index --cacheinfo 160000 `cd ../raimd && git rev-parse HEAD` raimd)
+	(cd natsrv && git update-index --cacheinfo 160000 `cd ../sassrv && git rev-parse HEAD` sassrv)
+	(cd natsrv && git update-index --cacheinfo 160000 `cd ../natsmd && git rev-parse HEAD` natsmd)
+	(cd raids && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
+	(cd raids && git update-index --cacheinfo 160000 `cd ../h3 && git rev-parse HEAD` h3)
+	(cd raids && git update-index --cacheinfo 160000 `cd ../linecook && git rev-parse HEAD` linecook)
+	(cd raids && git update-index --cacheinfo 160000 `cd ../raimd && git rev-parse HEAD` raimd)
+	(cd raids && git update-index --cacheinfo 160000 `cd ../rdbparser && git rev-parse HEAD` rdbparser)
+	(cd raimd && git update-index --cacheinfo 160000 `cd ../libdecnumber && git rev-parse HEAD` libdecnumber)
+	(cd raist && git update-index --cacheinfo 160000 `cd ../raimd && git rev-parse HEAD` raimd)
+	(cd raist && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
+	(cd sassrv && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
+	(cd sassrv && git update-index --cacheinfo 160000 `cd ../raimd && git rev-parse HEAD` raimd)
+	(cd sassrv && git update-index --cacheinfo 160000 `cd ../HdrHistogram_c && git rev-parse rai` HdrHistogram_c)
 
 .PHONY: bump
 bump: dirs
-	if [ -n "`git -C openpgm status --porcelain`" ] ; then sh ./script/bump.sh openpgm/.copr/Makefile build_num ; fi
-	if [ -n "`git -C raikv status --porcelain`" ] ; then sh ./script/bump.sh raikv/.copr/Makefile build_num ; fi
-	if [ -n "`git -C libdecnumber status --porcelain`" ] ; then sh ./script/bump.sh libdecnumber/.copr/Makefile build_num ; fi
-	if [ -n "`git -C raimd status --porcelain`" ] ; then sh ./script/bump.sh raimd/.copr/Makefile build_num ; fi
-	if [ -n "`git -C linecook status --porcelain`" ] ; then sh ./script/bump.sh linecook/.copr/Makefile build_num ; fi
-	if [ -n "`git -C rdbparser status --porcelain`" ] ; then sh ./script/bump.sh rdbparser/.copr/Makefile build_num ; fi
-	if [ -n "`git -C h3 status --porcelain`" ] ; then sh ./script/bump.sh h3/.copr/Makefile build_num ; fi
-	if [ -n "`git -C raist status --porcelain`" ] ; then sh ./script/bump.sh raist/.copr/Makefile build_num ; fi
-	if [ -n "`git -C aeron status --porcelain`" ] ; then sh ./script/bump.sh aeron/.copr/Makefile build_num ; fi
-	if [ -n "`git -C aekv status --porcelain`" ] ; then sh ./script/bump.sh aekv/.copr/Makefile build_num ; fi
-	if [ -n "`git -C sassrv status --porcelain`" ] ; then sh ./script/bump.sh sassrv/.copr/Makefile build_num ; fi
-	if [ -n "`git -C aerv status --porcelain`" ] ; then sh ./script/bump.sh aerv/.copr/Makefile build_num ; fi
-	if [ -n "`git -C raids status --porcelain`" ] ; then sh ./script/bump.sh raids/.copr/Makefile build_num ; fi
-	if [ -n "`git -C capr status --porcelain`" ] ; then sh ./script/bump.sh capr/.copr/Makefile build_num ; fi
-	if [ -n "`git -C raipgm status --porcelain`" ] ; then sh ./script/bump.sh raipgm/.copr/Makefile build_num ; fi
-	if [ -n "`git -C natsmd status --porcelain`" ] ; then sh ./script/bump.sh natsmd/.copr/Makefile build_num ; fi
-	if [ -n "`git -C natsrv status --porcelain`" ] ; then sh ./script/bump.sh natsrv/.copr/Makefile build_num ; fi
+	if [ -n "`cd openpgm && git status --porcelain`" ] ; then sh ./script/bump.sh openpgm/.copr/Makefile build_num ; fi
+	if [ -n "`cd raikv && git status --porcelain`" ] ; then sh ./script/bump.sh raikv/.copr/Makefile build_num ; fi
+	if [ -n "`cd libdecnumber && git status --porcelain`" ] ; then sh ./script/bump.sh libdecnumber/.copr/Makefile build_num ; fi
+	if [ -n "`cd raimd && git status --porcelain`" ] ; then sh ./script/bump.sh raimd/.copr/Makefile build_num ; fi
+	if [ -n "`cd linecook && git status --porcelain`" ] ; then sh ./script/bump.sh linecook/.copr/Makefile build_num ; fi
+	if [ -n "`cd rdbparser && git status --porcelain`" ] ; then sh ./script/bump.sh rdbparser/.copr/Makefile build_num ; fi
+	if [ -n "`cd h3 && git status --porcelain`" ] ; then sh ./script/bump.sh h3/.copr/Makefile build_num ; fi
+	if [ -n "`cd raist && git status --porcelain`" ] ; then sh ./script/bump.sh raist/.copr/Makefile build_num ; fi
+	if [ -n "`cd aeron && git status --porcelain`" ] ; then sh ./script/bump.sh aeron/.copr/Makefile build_num ; fi
+	if [ -n "`cd aekv && git status --porcelain`" ] ; then sh ./script/bump.sh aekv/.copr/Makefile build_num ; fi
+	if [ -n "`cd sassrv && git status --porcelain`" ] ; then sh ./script/bump.sh sassrv/.copr/Makefile build_num ; fi
+	if [ -n "`cd aerv && git status --porcelain`" ] ; then sh ./script/bump.sh aerv/.copr/Makefile build_num ; fi
+	if [ -n "`cd raids && git status --porcelain`" ] ; then sh ./script/bump.sh raids/.copr/Makefile build_num ; fi
+	if [ -n "`cd capr && git status --porcelain`" ] ; then sh ./script/bump.sh capr/.copr/Makefile build_num ; fi
+	if [ -n "`cd raipgm && git status --porcelain`" ] ; then sh ./script/bump.sh raipgm/.copr/Makefile build_num ; fi
+	if [ -n "`cd natsmd && git status --porcelain`" ] ; then sh ./script/bump.sh natsmd/.copr/Makefile build_num ; fi
+	if [ -n "`cd natsrv && git status --porcelain`" ] ; then sh ./script/bump.sh natsrv/.copr/Makefile build_num ; fi
 
 .PHONY: commit
 commit: dirs
-	if [ -n "`git -C raikv openpgm --porcelain`" ] ; then git -C openpgm commit -a ; fi
-	if [ -n "`git -C raikv status --porcelain`" ] ; then git -C raikv commit -a ; fi
-	if [ -n "`git -C libdecnumber status --porcelain`" ] ; then git -C libdecnumber commit -a ; fi
-	if [ -n "`git -C raimd status --porcelain`" ] ; then git -C raimd commit -a ; fi
-	if [ -n "`git -C linecook status --porcelain`" ] ; then git -C linecook commit -a ; fi
-	if [ -n "`git -C rdbparser status --porcelain`" ] ; then git -C rdbparser commit -a ; fi
-	if [ -n "`git -C h3 status --porcelain`" ] ; then git -C h3 commit -a ; fi
-	if [ -n "`git -C raist status --porcelain`" ] ; then git -C raist commit -a ; fi
-	if [ -n "`git -C aeron status --porcelain`" ] ; then git -C aeron commit -a ; fi
-	if [ -n "`git -C aekv status --porcelain`" ] ; then git -C aekv commit -a ; fi
-	if [ -n "`git -C sassrv status --porcelain`" ] ; then git -C sassrv commit -a ; fi
-	if [ -n "`git -C aerv status --porcelain`" ] ; then git -C aerv commit -a ; fi
-	if [ -n "`git -C raids status --porcelain`" ] ; then git -C raids commit -a ; fi
-	if [ -n "`git -C capr status --porcelain`" ] ; then git -C capr commit -a ; fi
-	if [ -n "`git -C raipgm status --porcelain`" ] ; then git -C raipgm commit -a ; fi
-	if [ -n "`git -C natsmd status --porcelain`" ] ; then git -C natsmd commit -a ; fi
-	if [ -n "`git -C natsrv status --porcelain`" ] ; then git -C natsrv commit -a ; fi
+	if [ -n "`cd openpgm && git status --porcelain`" ] ; then cd openpgm && git commit -a ${MSG} ; fi
+	if [ -n "`cd raikv && git status --porcelain`" ] ; then cd raikv && git commit -a ${MSG} ; fi
+	if [ -n "`cd libdecnumber && git status --porcelain`" ] ; then cd libdecnumber && git commit -a ${MSG} ; fi
+	if [ -n "`cd raimd && git status --porcelain`" ] ; then cd raimd && git commit -a ${MSG} ; fi
+	if [ -n "`cd linecook && git status --porcelain`" ] ; then cd linecook && git commit -a ${MSG} ; fi
+	if [ -n "`cd rdbparser && git status --porcelain`" ] ; then cd rdbparser && git commit -a ${MSG} ; fi
+	if [ -n "`cd h3 && git status --porcelain`" ] ; then cd h3 && git commit -a ${MSG} ; fi
+	if [ -n "`cd raist && git status --porcelain`" ] ; then cd raist && git commit -a ${MSG} ; fi
+	if [ -n "`cd HdrHistogram_c && git status --porcelain`" ] ; then cd HdrHistogram_c && git commit -a ${MSG} ; fi
+	if [ -n "`cd aeron && git status --porcelain`" ] ; then cd aeron && git commit -a ${MSG} ; fi
+	if [ -n "`cd aekv && git status --porcelain`" ] ; then cd aekv && git commit -a ${MSG} ; fi
+	if [ -n "`cd sassrv && git status --porcelain`" ] ; then cd sassrv && git commit -a ${MSG} ; fi
+	if [ -n "`cd aerv && git status --porcelain`" ] ; then cd aerv && git commit -a ${MSG} ; fi
+	if [ -n "`cd raids && git status --porcelain`" ] ; then cd raids && git commit -a ${MSG} ; fi
+	if [ -n "`cd capr && git status --porcelain`" ] ; then cd capr && git commit -a ${MSG} ; fi
+	if [ -n "`cd raipgm && git status --porcelain`" ] ; then cd raipgm && git commit -a ${MSG} ; fi
+	if [ -n "`cd natsmd && git status --porcelain`" ] ; then cd natsmd && git commit -a ${MSG} ; fi
+	if [ -n "`cd natsrv && git status --porcelain`" ] ; then cd natsrv && git commit -a ${MSG} ; fi
 
 .PHONY: clean
 clean: dirs
@@ -348,3 +332,26 @@ dirs:
 doc/index.html: doc/index.adoc
 	a2x -f xhtml doc/index.adoc
 
+doc/protocol.html: doc/protocol.adoc
+	a2x -f xhtml doc/protocol.adoc
+
+#copr-cli build-package gold --name openpgm
+#copr-cli build-package gold --name aeron
+#copr-cli build-package gold --name aekv
+#copr-cli build-package gold --name aerv
+#copr-cli build-package gold --name capr
+#copr-cli build-package gold --name raipgm
+.PHONY: packages
+packages:
+	copr-cli build-package gold --name raikv
+	copr-cli build-package gold --name libdecnumber
+	copr-cli build-package gold --name raimd
+	copr-cli build-package gold --name linecook
+	copr-cli build-package gold --name rdbparser
+	copr-cli build-package gold --name h3
+	copr-cli build-package gold --name raist
+	copr-cli build-package gold --name hdrhist
+	copr-cli build-package gold --name sassrv
+	copr-cli build-package gold --name raids
+	copr-cli build-package gold --name natsmd
+	copr-cli build-package gold --name natsrv

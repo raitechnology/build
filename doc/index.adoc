@@ -29,6 +29,9 @@ The RPM files here are built from their github clones.
 - link:https://github.com/raitechnology/natsrv[NATS RV], RV to NATS protocol
   bridge (package: natsrv)
 
+- link:https://github.com/raitechnology/natsrv[SASS RV], RV protocol bridge
+  (package: sassrv)
+
 - other packages that are dependencies of the above, the `git submodule`
 facility links the package within the git source trees on github.
 
@@ -113,7 +116,7 @@ Downloading packages:
 (5/6): liblzf-3.6-7.el7.x86_64.rpm                        |  22 kB  00:00:00
 (6/6): raids-1.2.0-40.el7.x86_64.rpm                      | 893 kB  00:00:00
  ---------------------------------------------------------------------------
-Total                                                                                                                      6.6 MB/s | 1.7 MB  00:00:00     
+Total                                            6.6 MB/s | 1.7 MB  00:00:00     
 Retrieving key from https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology
 Importing GPG key 0x7110B2D1:
  Userid     : "Rai Technology <chris@raitechnology.com>"
