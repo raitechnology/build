@@ -330,10 +330,12 @@ dirs:
 	touch dirs
 
 doc/index.html: doc/index.adoc
-	a2x -f xhtml doc/index.adoc
+	asciidoctor -b html5 doc/index.adoc
+#@	a2x -f xhtml doc/index.adoc
 
 doc/protocol.html: doc/protocol.adoc
-	a2x -f xhtml doc/protocol.adoc
+	asciidoctor -b html5 doc/protocol.adoc
+#@	a2x -f xhtml doc/protocol.adoc
 
 #copr-cli build-package gold --name openpgm
 #copr-cli build-package gold --name aeron

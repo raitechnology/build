@@ -3,7 +3,7 @@ Rai RPM Repository for RedHat Based Systems
 :toc: left
 
 About
-~~~~~
+-----
 
 The open source caching and distribution components that are designed by Rai
 are built for RPM based software installation and are stored in this repo.
@@ -36,7 +36,7 @@ The RPM files here are built from their github clones.
 facility links the package within the git source trees on github.
 
 Installing
-~~~~~~~~~~
+----------
 
 Download one of the following repo files and install it to `/etc/yum.repos.d/`.
 
@@ -49,7 +49,7 @@ Download one of the following repo files and install it to `/etc/yum.repos.d/`.
 Then use `yum` or `dnf` to install packages.
 
 Example
-~~~~~~~
+-------
 
 This example uses `curl` to install, then `yum` to install the raids package
 which has several dependencies.  These are resolved, then the GPG public key
@@ -153,7 +153,7 @@ Complete!
 ----
 
 Description
-~~~~~~~~~~~
+-----------
 
 The RPM installers, *yum* or *dnf* can be used when the repo file is
 installed.  This file usually lives in a well known directory
