@@ -1,4 +1,3 @@
-
 Rai Protocol for Cache Backed Pub Sub
 =====================================
 :toc: left
@@ -35,6 +34,10 @@ Cache backed subscription operations
 
 - This extends the subscription listen to also provide a client endpoint for
   intializing the image associated with the subscription.
+
+. Snapshot Intial
+
+- A one time request for the current state of the cached image.
 
 . Update Publish
 
@@ -102,6 +105,11 @@ Cache backed subscription operations
 - If a subject stream is permanently ended, this notifies that the publisher no
   longer intends send updates.
 
+. Subject Renamed
+
+- When a subject stream is renamed to another, this message identifies which
+  subject should be subscribed to reestablish the stream.
+
 . Recap Publish
 
 - When a feed switch, or primary to secondary flip, occurs, a recap of the
@@ -129,6 +137,17 @@ Cache backed subscription operations
   track the activity of the clients.  This service endpoint encodes the access
   levels and the logging of subscription events.
 
+. Service Directory
+
+- A subject space is often divided into seperate services, each with it's own
+  well known endpoint for establishing a subscriptions.  Traditionally, the
+  first segment of the subject identifies the publsher.  For example,
+  NASDAQ may be used to establish subscriptions published by the NASDAQ
+  feed, and NYSE may be used for the NYSE feed.  The service directory
+  names all of the publishers by their subject prefix.  It should also
+  define the dictionary and entitlements well known endpoints if they
+  are desired.
+
 Protocols supported
 ~~~~~~~~~~~~~~~~~~~
 
@@ -138,17 +157,263 @@ for a cache aware pubsub system.
 - RV
 - NATS
 - Redis
-- CAPR
 - Http/Websocket
 - OpenPGM
 
 RV
 ~~
 
-SASS2 base, most of the architecture already supports many of the features
-needed.
+Overview
+^^^^^^^^
 
-Todo.. describe SASS2.
+With the SASS2 base, most of the RV architecture already supports many of the
+features needed for subscription visibility and identifying the clients.  The
+most annoying features of SASS is the static dictionary and the lack of
+formalizing the sequence numbers of the updates.  There are two forms of
+sequencing which use the same SEQ_NO field.  The publisher may use the SEQ_NO
+field for sequencing the stream of data, across multiple subjects but the
+client needs the sequencing for each subject.  This segmentation requires
+clients to know what variation of sequencing is used in order to verify the
+sequences of updates.
+
+The SASS2 header includes MSG_TYPE, REC_TYPE, SEQ_NO, REC_STATUS.  The
+MSG_TYPE, REC_STATUS fields encode the basic response types needed, with an
+optional status TEXT field for descriptions.  The REC_TYPE is deprecated as an
+advisory field, as support for dictionary based record encoding as been erroded
+by field additions and the pain of updating a static dictionary in a
+distributed system.
+
+The subscription management is built into the RV system.  Each unique endpoint
+identifies itself using the IP address of the interface and a timestamp of the
+daemon startup.  The subscriptions are reasserted every 90 seconds by
+publishing a HOST.STATUS message.  When the transport is disrupted, the
+subscriptions can be obtained from the host by querying it.  Each host is
+reachable on a well known subject _INBOX.hostip.DAEMON.  The main drawback of
+this management method is the 90 seconds interval, which can lead to long
+periods of outages bounded by 90 second intervals before a subject stream
+reestablishes the cached state.  Any switch or network element in between the
+subscriber and the publisher which drops the multicast UDP packets can cause a
+a long disruption in the subscriptions that were dropped.
+
+The advantages of SASS2 are that it is a low overhead system without a lot of
+subscription management traffic during normal operation.  The successor to
+SASS2, called SASS3, adds reassert type messages and each client publishes
+these on a randomized interval.  The _INBOX.hostip.DAEMON is no longer
+supported since the Tibco archetecture introduced subject based routers (rvrd)
+where the network IP addresses may be using NAT translation between segments or
+may not be directly reachable through IP routers.  When these are present, the
+_INBOX addresses used for point to point communication are modified as they
+progress through the rvrd routers.  For example, a _INBOX.hostip.timestamp
+client endpoint is modified to be
+_INBOX.routerip.timestamp._INBOX.hostip.timestamp.  This type of infrastructure
+is uncommon, the split of Reuters and Tibco because Reuters used its own method
+for connecting network boundaries through the use of product iterations of
+market data hub distribution.
+
+Basic Operators
+^^^^^^^^^^^^^^^
+
+- SASS2 Subscription Request -- A subscription generates this message:
+
+   _RV.INFO.SYSTEM.LISTEN.START.subject : {
+     return : _INBOX.hostip.timestamp,
+     data : {
+       ADV_CLASS : INFO,
+       ADV_SOURCE : SYSTEM,
+       ADV_NAME : LISTEN.START.subject
+       id : hostip.timestamp,
+       sub : subject,
+       refcnt : counter
+     }
+   }
+
+The *sub* and *id* fields identify the subject and the client making the
+subscription, the optional return field requests that an inital response is
+desired.  In recent versions of the Tibrv API, it is not possible to specify
+the return field in a subscription request.  The *refcnt* is incremented and
+decremented by the same client *id* starting the same subscription.  This is
+uncommon since most client Tib APIs will not allow this.
+
+- SASS2 Snapshot Request -- A well known endpoint that receives:
+
+  _SNAP.subject : {
+    return : _INBOX.hostip.timestamp,
+    flags : mask
+  }
+
+The snapshot image is returned to the _INBOX address.  The optional flags can
+additionally specify that a subscription should start (flags = 6).  This allows
+Tibrv API clients to request an initial value with a return _INBOX, which is
+no longer possible with the LISTEN.START message when using the Tibrv API.
+
+- SASS2 Unsubscribe Request -- An unsubscribe generates this message:
+
+   _RV.INFO.SYSTEM.LISTEN.STOP.subject : {
+     return : _INBOX.hostip.timestamp,
+     data : {
+       ADV_CLASS : INFO,
+       ADV_SOURCE : SYSTEM,
+       ADV_NAME : LISTEN.STOP.subject
+       id : hostip.timestamp,
+       sub : subject,
+       refcnt : counter
+     }
+   }
+
+- SASS3 Subscription Request -- A well known endpoint is defined for
+  each service on a subject domain, for example, *_SASS.NASDAQ.SUB*.
+  This message is published by the client for subscription operations:
+
+  _SASS.svc.SUB : {
+    return : _INBOX.hostip.timestamp,
+    data : {
+      M : magic,
+      T : flags,
+      A : {
+        U : user,
+        H : host,
+        A : program,
+        P : process-id
+      }
+      S : subject
+    }
+  }
+
+The *S* and *A* fields identify the subject and the client making the
+subscription, and the *T* flags is a bit mask identifing what operation is
+requested:
+
+  .. SNAPSHOT_FLAG        = 0x01
+  .. SUBSCRIBE_FLAG       = 0x02
+  .. INITIAL_VALUES_FLAG  = 0x04
+  .. UNSUBSCRIBE_FLAG     = 0x08
+  .. REFRESH_FLAG         = 0x10
+  .. RESUBSCRIBE_FLAG     = 0x80
+
+The *A* field is commonly combined into a string as *user@host/program#pid*.
+This endpoint merges the basic subscription operations: Subscription,
+Subscription Image, Snapshot, Refresh Image, Subscription Reassert,
+Unsubscribe.  The advantages of a SASS3 request are that the client is
+identified by a readable string rather than a hostip and timestamp and that
+many of the operators for asserting subscriptions are combined into one
+publish.  The disadvantage is that the service endpoint needs to be defined and
+the host field does not need to identify the IP address of the client making
+the request.
+
+- SASS2 Reassert Subscription -- A SASS2 subscription managment database
+is necessary to ensure that the HOST.STATUS is updated every 90 seconds.
+Every subscription contains an *id* which identifies the daemon endpoint
+that can be queried to obtain the current subscription state.  This is
+the HOST.STATUS message (missing some fields for brevity):
+
+  _RV.INFO.SYSTEM.HOST.STATUS.hostip : {
+    ADV_CLASS : INFO,
+    ADV_SOURCE : SYSTEM,
+    ADV_NAME : HOST.STATUS.hostip,
+    hostaddr : ipaddress,
+    time : milliseconds,
+    service : service-number,
+    network : network-spec
+    ...
+  }
+
+The *hostip* part of the subject reasserts all subscriptions with the *id*
+hostip.timestamp or hostip.DAEMON.timestamp, which were specified by the
+LISTEN.START message.  If there is message loss on the transport or the
+HOST.STATUS message does not get received by the subscription manager at the
+time expected, it uses point to point requests to retrieve the current
+subscription state.
+
+There are two queries to obtain the state of subscriptions, the session
+query and the subscription query.  The session query lists the client
+sessions attached to a daemon.  The subscription query lists the subject
+attached to a session(s).
+
+The format of the session state queries are:
+
+  _INBOX.hostip.DAEMON : {
+    return : _INBOX.hostip.timestamp,
+    data : {
+      op : get,
+      what : sessions
+    }
+  }
+
+The format of the subscripion state queries are:
+
+  _INBOX.hostip.DAEMON : {
+    return : _INBOX.hostip.timestamp,
+    data : {
+      op : get,
+      what : subscriptions,
+      session : hostip.timestamp
+    }
+  }
+
+The return of the session state query is a list of sessions, which match
+the *id* of the LISTEN.START notifications:
+
+  _INBOX.hostip.timestamp : {
+    null : hostip.DAEMON.timestamp,
+    null : hostip.timestamp,
+    null : hostip.timestamp
+  }
+
+Each of these sessions can be used to retrieve the subscriptions using the
+subscription state query above, this returns a list of subjects:
+
+  _INBOX.hostip.timestamp : {
+    user : nobody
+    null : subject
+    null : subject
+    end  : 1
+  }
+
+- SASS3 Reassert Subscription -- The *_SASS.svc.SUB* method of starting
+subscriptions can contain a list of subjects.  Although the list can be used to
+mass start or stop subscriptions, the primary use is to reassert them.  After
+the list is processed by the manager, an ACK is published to the return
+address.  If this message is used for reassert:
+
+  _SASS.svc.SUB : {
+    return : _INBOX.hostip.timestamp,
+    data : {
+      M : magic,
+      T : 0x80,
+      A : {
+        U : user,
+        H : host,
+        A : program,
+        P : process-id
+      }
+      S : subject,
+      S : subject,
+      S : subject
+    }
+  }
+
+An ACK is published to the return:
+
+  _INBOX.hostip.timestamp : {
+    data : {
+      M : magic,
+      I : 0x20,
+      T : 0,
+      S : 0,
+      D : {
+        S : subject,
+        S : subject,
+        S : subject
+      }
+    }
+  }
+
+This is an active method of reasserting compared to the SASS2 method.  The
+advantage of SASS3 is that if the status of the subjects can be updated by the
+manager as a list.  The *T* and the *S* fields are derived from the MSG_TYPE
+and REC_STATUS fields of the updates.  The SASS2 passive method allows for
+simpler clients and both protocols will update the status of the subjects via
+update publishes.
 
 NATS
 ~~~~
@@ -179,5 +444,3 @@ This is a transport, not a pubsub sytem.  The history of PGM flows through
 early caching systems by Tibco, to RFC, to open source.
 
 Todo.. describe OpenPGM + pubsub + subscription management.
-
-

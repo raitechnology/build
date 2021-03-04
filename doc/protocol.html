@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Rai Protocol for Cache Backed Pub Sub</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css" /><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot" /></head><body><div xml:lang="en" class="article" lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="idm45928382365712"></a>Rai Protocol for Cache Backed Pub Sub</h2></div></div><hr /></div><div class="toc"><p><strong>Table of Contents</strong></p><dl class="toc"><dt><span class="section"><a href="#_about">1. About</a></span></dt><dt><span class="section"><a href="#_cache_backed_subscription_operations">2. Cache backed subscription operations</a></span></dt><dt><span class="section"><a href="#_protocols_supported">3. Protocols supported</a></span></dt><dt><span class="section"><a href="#_rv">4. RV</a></span></dt><dt><span class="section"><a href="#_nats">5. NATS</a></span></dt><dt><span class="section"><a href="#_redis">6. Redis</a></span></dt><dt><span class="section"><a href="#_http_websocket">7. Http/Websocket</a></span></dt><dt><span class="section"><a href="#_openpgm">8. OpenPGM</a></span></dt></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_about"></a>1. About</h2></div></div></div><p>This document describes a caching layer on top of existing pubsub systems.
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Rai Protocol for Cache Backed Pub Sub</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css" /><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot" /></head><body><div xml:lang="en" class="article" lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="idm46417179901360"></a>Rai Protocol for Cache Backed Pub Sub</h2></div></div><hr /></div><div class="toc"><p><strong>Table of Contents</strong></p><dl class="toc"><dt><span class="section"><a href="#_about">1. About</a></span></dt><dt><span class="section"><a href="#_cache_backed_subscription_operations">2. Cache backed subscription operations</a></span></dt><dt><span class="section"><a href="#_protocols_supported">3. Protocols supported</a></span></dt><dt><span class="section"><a href="#_rv">4. RV</a></span></dt><dd><dl><dt><span class="section"><a href="#_overview">4.1. Overview</a></span></dt><dt><span class="section"><a href="#_basic_operators">4.2. Basic Operators</a></span></dt></dl></dd><dt><span class="section"><a href="#_nats">5. NATS</a></span></dt><dt><span class="section"><a href="#_redis">6. Redis</a></span></dt><dt><span class="section"><a href="#_http_websocket">7. Http/Websocket</a></span></dt><dt><span class="section"><a href="#_openpgm">8. OpenPGM</a></span></dt></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_about"></a>1. About</h2></div></div></div><p>This document describes a caching layer on top of existing pubsub systems.
 Pubsub provides for a multiplexed subject adressed based stream of messages
 from publisher to subscriber.  Pubsub is usually layered on top of a reliable
 based transport, such as TCP or PGM.  The multicast supported by the
@@ -22,6 +22,10 @@ Subscription Intial
 </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
 This extends the subscription listen to also provide a client endpoint for
   intializing the image associated with the subscription.
+</li></ul></div></li><li class="listitem"><p class="simpara">
+Snapshot Intial
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+A one time request for the current state of the cached image.
 </li></ul></div></li><li class="listitem"><p class="simpara">
 Update Publish
 </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
@@ -89,6 +93,11 @@ Subscription Expired
 If a subject stream is permanently ended, this notifies that the publisher no
   longer intends send updates.
 </li></ul></div></li><li class="listitem"><p class="simpara">
+Subject Renamed
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+When a subject stream is renamed to another, this message identifies which
+  subject should be subscribed to reestablish the stream.
+</li></ul></div></li><li class="listitem"><p class="simpara">
 Recap Publish
 </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
 When a feed switch, or primary to secondary flip, occurs, a recap of the
@@ -115,6 +124,17 @@ Entitlements
 When a system is designed for licensed access to data, it is necessary to
   track the activity of the clients.  This service endpoint encodes the access
   levels and the logging of subscription events.
+</li></ul></div></li><li class="listitem"><p class="simpara">
+Service Directory
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+A subject space is often divided into seperate services, each with it’s own
+  well known endpoint for establishing a subscriptions.  Traditionally, the
+  first segment of the subject identifies the publsher.  For example,
+  NASDAQ may be used to establish subscriptions published by the NASDAQ
+  feed, and NYSE may be used for the NYSE feed.  The service directory
+  names all of the publishers by their subject prefix.  It should also
+  define the dictionary and entitlements well known endpoints if they
+  are desired.
 </li></ul></div></li></ol></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_protocols_supported"></a>3. Protocols supported</h2></div></div></div><p>The following protocols will be described for each of the operations needed
 for a cache aware pubsub system.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
 RV
@@ -123,13 +143,207 @@ NATS
 </li><li class="listitem">
 Redis
 </li><li class="listitem">
-CAPR
-</li><li class="listitem">
 Http/Websocket
 </li><li class="listitem">
 OpenPGM
-</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_rv"></a>4. RV</h2></div></div></div><p>SASS2 base, most of the architecture already supports many of the features
-needed.</p><p>Todo.. describe SASS2.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_nats"></a>5. NATS</h2></div></div></div><p>NATS does not natively have subscription management, so much of the caching
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_rv"></a>4. RV</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_overview"></a>4.1. Overview</h3></div></div></div><p>With the SASS2 base, most of the RV architecture already supports many of the
+features needed for subscription visibility and identifying the clients.  The
+most annoying features of SASS is the static dictionary and the lack of
+formalizing the sequence numbers of the updates.  There are two forms of
+sequencing which use the same SEQ_NO field.  The publisher may use the SEQ_NO
+field for sequencing the stream of data, across multiple subjects but the
+client needs the sequencing for each subject.  This segmentation requires
+clients to know what variation of sequencing is used in order to verify the
+sequences of updates.</p><p>The SASS2 header includes MSG_TYPE, REC_TYPE, SEQ_NO, REC_STATUS.  The
+MSG_TYPE, REC_STATUS fields encode the basic response types needed, with an
+optional status TEXT field for descriptions.  The REC_TYPE is deprecated as an
+advisory field, as support for dictionary based record encoding as been erroded
+by field additions and the pain of updating a static dictionary in a
+distributed system.</p><p>The subscription management is built into the RV system.  Each unique endpoint
+identifies itself using the IP address of the interface and a timestamp of the
+daemon startup.  The subscriptions are reasserted every 90 seconds by
+publishing a HOST.STATUS message.  When the transport is disrupted, the
+subscriptions can be obtained from the host by querying it.  Each host is
+reachable on a well known subject _INBOX.hostip.DAEMON.  The main drawback of
+this management method is the 90 seconds interval, which can lead to long
+periods of outages bounded by 90 second intervals before a subject stream
+reestablishes the cached state.  Any switch or network element in between the
+subscriber and the publisher which drops the multicast UDP packets can cause a
+a long disruption in the subscriptions that were dropped.</p><p>The advantages of SASS2 are that it is a low overhead system without a lot of
+subscription management traffic during normal operation.  The successor to
+SASS2, called SASS3, adds reassert type messages and each client publishes
+these on a randomized interval.  The _INBOX.hostip.DAEMON is no longer
+supported since the Tibco archetecture introduced subject based routers (rvrd)
+where the network IP addresses may be using NAT translation between segments or
+may not be directly reachable through IP routers.  When these are present, the
+_INBOX addresses used for point to point communication are modified as they
+progress through the rvrd routers.  For example, a _INBOX.hostip.timestamp
+client endpoint is modified to be
+_INBOX.routerip.timestamp._INBOX.hostip.timestamp.  This type of infrastructure
+is uncommon, the split of Reuters and Tibco because Reuters used its own method
+for connecting network boundaries through the use of product iterations of
+market data hub distribution.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_basic_operators"></a>4.2. Basic Operators</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p class="simpara">
+SASS2 Subscription Request — A subscription generates this message:
+</p><pre class="literallayout">_RV.INFO.SYSTEM.LISTEN.START.subject : {
+  return : _INBOX.hostip.timestamp,
+  data : {
+    ADV_CLASS : INFO,
+    ADV_SOURCE : SYSTEM,
+    ADV_NAME : LISTEN.START.subject
+    id : hostip.timestamp,
+    sub : subject,
+    refcnt : counter
+  }
+}</pre></li></ul></div><p>The <span class="strong"><strong>sub</strong></span> and <span class="strong"><strong>id</strong></span> fields identify the subject and the client making the
+subscription, the optional return field requests that an inital response is
+desired.  In recent versions of the Tibrv API, it is not possible to specify
+the return field in a subscription request.  The <span class="strong"><strong>refcnt</strong></span> is incremented and
+decremented by the same client <span class="strong"><strong>id</strong></span> starting the same subscription.  This is
+uncommon since most client Tib APIs will not allow this.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p class="simpara">
+SASS2 Snapshot Request — A well known endpoint that receives:
+</p><pre class="literallayout">_SNAP.subject : {
+  return : _INBOX.hostip.timestamp,
+  flags : mask
+}</pre></li></ul></div><p>The snapshot image is returned to the _INBOX address.  The optional flags can
+additionally specify that a subscription should start (flags = 6).  This allows
+Tibrv API clients to request an initial value with a return _INBOX, which is
+no longer possible with the LISTEN.START message when using the Tibrv API.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p class="simpara">
+SASS2 Unsubscribe Request — An unsubscribe generates this message:
+</p><pre class="literallayout">_RV.INFO.SYSTEM.LISTEN.STOP.subject : {
+  return : _INBOX.hostip.timestamp,
+  data : {
+    ADV_CLASS : INFO,
+    ADV_SOURCE : SYSTEM,
+    ADV_NAME : LISTEN.STOP.subject
+    id : hostip.timestamp,
+    sub : subject,
+    refcnt : counter
+  }
+}</pre></li><li class="listitem"><p class="simpara">
+SASS3 Subscription Request — A well known endpoint is defined for
+  each service on a subject domain, for example, <span class="strong"><strong>_SASS.NASDAQ.SUB</strong></span>.
+  This message is published by the client for subscription operations:
+</p><pre class="literallayout">_SASS.svc.SUB : {
+  return : _INBOX.hostip.timestamp,
+  data : {
+    M : magic,
+    T : flags,
+    A : {
+      U : user,
+      H : host,
+      A : program,
+      P : process-id
+    }
+    S : subject
+  }
+}</pre></li></ul></div><p>The <span class="strong"><strong>S</strong></span> and <span class="strong"><strong>A</strong></span> fields identify the subject and the client making the
+subscription, and the <span class="strong"><strong>T</strong></span> flags is a bit mask identifing what operation is
+requested:</p><div class="orderedlist"><ol class="orderedlist" type="a"><li class="listitem">
+SNAPSHOT_FLAG        = 0x01
+</li><li class="listitem">
+SUBSCRIBE_FLAG       = 0x02
+</li><li class="listitem">
+INITIAL_VALUES_FLAG  = 0x04
+</li><li class="listitem">
+UNSUBSCRIBE_FLAG     = 0x08
+</li><li class="listitem">
+REFRESH_FLAG         = 0x10
+</li><li class="listitem">
+RESUBSCRIBE_FLAG     = 0x80
+</li></ol></div><p>The <span class="strong"><strong>A</strong></span> field is commonly combined into a string as <span class="strong"><strong>user@host/program#pid</strong></span>.
+This endpoint merges the basic subscription operations: Subscription,
+Subscription Image, Snapshot, Refresh Image, Subscription Reassert,
+Unsubscribe.  The advantages of a SASS3 request are that the client is
+identified by a readable string rather than a hostip and timestamp and that
+many of the operators for asserting subscriptions are combined into one
+publish.  The disadvantage is that the service endpoint needs to be defined and
+the host field does not need to identify the IP address of the client making
+the request.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p class="simpara">
+SASS2 Reassert Subscription — A SASS2 subscription managment database
+is necessary to ensure that the HOST.STATUS is updated every 90 seconds.
+Every subscription contains an <span class="strong"><strong>id</strong></span> which identifies the daemon endpoint
+that can be queried to obtain the current subscription state.  This is
+the HOST.STATUS message (missing some fields for brevity):
+</p><pre class="literallayout">_RV.INFO.SYSTEM.HOST.STATUS.hostip : {
+  ADV_CLASS : INFO,
+  ADV_SOURCE : SYSTEM,
+  ADV_NAME : HOST.STATUS.hostip,
+  hostaddr : ipaddress,
+  time : milliseconds,
+  service : service-number,
+  network : network-spec
+  ...
+}</pre></li></ul></div><p>The <span class="strong"><strong>hostip</strong></span> part of the subject reasserts all subscriptions with the <span class="strong"><strong>id</strong></span>
+hostip.timestamp or hostip.DAEMON.timestamp, which were specified by the
+LISTEN.START message.  If there is message loss on the transport or the
+HOST.STATUS message does not get received by the subscription manager at the
+time expected, it uses point to point requests to retrieve the current
+subscription state.</p><p>There are two queries to obtain the state of subscriptions, the session
+query and the subscription query.  The session query lists the client
+sessions attached to a daemon.  The subscription query lists the subject
+attached to a session(s).</p><p>The format of the session state queries are:</p><pre class="literallayout">_INBOX.hostip.DAEMON : {
+  return : _INBOX.hostip.timestamp,
+  data : {
+    op : get,
+    what : sessions
+  }
+}</pre><p>The format of the subscripion state queries are:</p><pre class="literallayout">_INBOX.hostip.DAEMON : {
+  return : _INBOX.hostip.timestamp,
+  data : {
+    op : get,
+    what : subscriptions,
+    session : hostip.timestamp
+  }
+}</pre><p>The return of the session state query is a list of sessions, which match
+the <span class="strong"><strong>id</strong></span> of the LISTEN.START notifications:</p><pre class="literallayout">_INBOX.hostip.timestamp : {
+  null : hostip.DAEMON.timestamp,
+  null : hostip.timestamp,
+  null : hostip.timestamp
+}</pre><p>Each of these sessions can be used to retrieve the subscriptions using the
+subscription state query above, this returns a list of subjects:</p><pre class="literallayout">_INBOX.hostip.timestamp : {
+  user : nobody
+  null : subject
+  null : subject
+  end  : 1
+}</pre><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p class="simpara">
+SASS3 Reassert Subscription — The <span class="strong"><strong>_SASS.svc.SUB</strong></span> method of starting
+subscriptions can contain a list of subjects.  Although the list can be used to
+mass start or stop subscriptions, the primary use is to reassert them.  After
+the list is processed by the manager, an ACK is published to the return
+address.  If this message is used for reassert:
+</p><pre class="literallayout">_SASS.svc.SUB : {
+  return : _INBOX.hostip.timestamp,
+  data : {
+    M : magic,
+    T : 0x80,
+    A : {
+      U : user,
+      H : host,
+      A : program,
+      P : process-id
+    }
+    S : subject,
+    S : subject,
+    S : subject
+  }
+}</pre></li></ul></div><p>An ACK is published to the return:</p><pre class="literallayout">_INBOX.hostip.timestamp : {
+  data : {
+    M : magic,
+    I : 0x20,
+    T : 0,
+    S : 0,
+    D : {
+      S : subject,
+      S : subject,
+      S : subject
+    }
+  }
+}</pre><p>This is an active method of reasserting compared to the SASS2 method.  The
+advantage of SASS3 is that if the status of the subjects can be updated by the
+manager as a list.  The <span class="strong"><strong>T</strong></span> and the <span class="strong"><strong>S</strong></span> fields are derived from the MSG_TYPE
+and REC_STATUS fields of the updates.  The SASS2 passive method allows for
+simpler clients and both protocols will update the status of the subjects via
+update publishes.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_nats"></a>5. NATS</h2></div></div></div><p>NATS does not natively have subscription management, so much of the caching
 semantics has to be layered on top of the base pubsub system.</p><p>Todo.. describe NATS + subscription management.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_redis"></a>6. Redis</h2></div></div></div><p>Redis also does not nately have subscripton management, but it does have a
 complex array of caching semantics that may be used.</p><p>Todo.. describe Redis + subscription management.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_http_websocket"></a>7. Http/Websocket</h2></div></div></div><p>This is basically the same as the Redis case, since the caching semantics
 works as the Redis RESP protocol is layered over the Websocket protocol.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="_openpgm"></a>8. OpenPGM</h2></div></div></div><p>This is a transport, not a pubsub sytem.  The history of PGM flows through
