@@ -454,6 +454,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_reassert_subscription">Reassert Subscription</a></li>
 <li><a href="#_subscription_initialsnapshot">Subscription Initial/Snapshot</a></li>
 <li><a href="#_update_publish">Update Publish</a></li>
+<li><a href="#_drop_notification">Drop Notification</a></li>
 </ul>
 </li>
 <li><a href="#_nats">NATS</a></li>
@@ -497,9 +498,9 @@ fault tolerance, and subscription visibility.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>A message from a client that multicasts to a well known endpoint with
+<p>A message from a subscriber that multicasts to a well known endpoint with
 notification of a subscripion start.  This message contains infromation
-identifying the client uniquely.</p>
+identifying the subscriber uniquely.</p>
 </li>
 </ul>
 </div>
@@ -509,8 +510,8 @@ identifying the client uniquely.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>This extends the subscription listen to also provide a client endpoint for
-intializing the image associated with the subscription.</p>
+<p>This extends the subscription listen to also provide a subscriber endpoint
+for intializing the image associated with the subscription.</p>
 </li>
 </ul>
 </div>
@@ -576,10 +577,10 @@ of time.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>In the event that a subscription timer expires, this notifies any client that
-may be active that the publisher dropped the subscription and is no longer
-forwarding messages.  If a client is still active, it must reasert or restart
-the subscription.</p>
+<p>In the event that a subscription timer expires, this notifies any subscriber
+that may be active that the publisher dropped the subscription and is no
+longer forwarding messages.  If a subscriber is still active, it must reasert
+or restart the subscription.</p>
 </li>
 </ul>
 </div>
@@ -590,9 +591,9 @@ the subscription.</p>
 <ul>
 <li>
 <p>If the publisher is no longer able to provide updates or has lost sequences
-of messages associated with a subject, this notifies the client that the
-current state is stale.  This may cause clients to restart a subscription on
-another path or they may need to wait for the publisher to restore the
+of messages associated with a subject, this notifies the subscriber that the
+current state is stale.  This may cause subsribers to restart a subscription
+on another path or they may need to wait for the publisher to restore the
 subject stream.</p>
 </li>
 </ul>
@@ -603,8 +604,8 @@ subject stream.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>When a subscription listen starts, this reply notifies the client that the
-subscription is established, but that no published data is currently
+<p>When a subscription listen starts, this reply notifies the subscriber that
+the subscription is established, but that no published data is currently
 available.</p>
 </li>
 </ul>
@@ -617,8 +618,8 @@ available.</p>
 <li>
 <p>Another form of subscription listen start reply where the publisher notifies
 that no published data is available, but is expected to be ready soon.  This
-often includes a zeroed record associated with the subject so that the client
-can initialize its internal state and be ready for updates.</p>
+often includes a zeroed record associated with the subject so that the
+subscriber can initialize its internal state and be ready for updates.</p>
 </li>
 </ul>
 </div>
@@ -700,7 +701,7 @@ is not as important.</p>
 <ul>
 <li>
 <p>If a dictionary is associated with the messages sent, this well known
-endpoint can be used by clients to download the latest dictionary.  If a
+endpoint can be used by subscribers to download the latest dictionary.  If a
 dictionary is not static, subscription for dictionary updates is also
 started.</p>
 </li>
@@ -713,8 +714,8 @@ started.</p>
 <ul>
 <li>
 <p>When a system is designed for licensed access to data, it is necessary to
-track the activity of the clients.  This service endpoint encodes the access
-levels and the logging of subscription events.</p>
+track the activity of the subscriber.  This service endpoint encodes the
+access levels and the logging of subscription events.</p>
 </li>
 </ul>
 </div>
@@ -775,14 +776,14 @@ for a cache aware pubsub system.</p>
 <h3 id="_overview">Overview</h3>
 <div class="paragraph">
 <p>With the <strong>SASS2</strong> base, most of the RV architecture already supports many of the
-features needed for subscription visibility and identifying the clients.  The
-most annoying features of <strong>SASS</strong> is the static dictionary and the lack of
+features needed for subscription visibility and identifying the subscriber.
+The most annoying features of <strong>SASS</strong> is the static dictionary and the lack of
 formalizing the sequence numbers of the updates.  There are two forms of
 sequencing which use the same <strong>SEQ_NO</strong> field.  The publisher may use the
 <strong>SEQ_NO</strong> field for sequencing the stream of data, across multiple subjects but
-the client needs the sequencing for each subject.  This segmentation requires
-clients to know what variation of sequencing is used in order to verify the
-sequences of updates.</p>
+the subscriber needs the sequencing for each subject.  This segmentation
+requires subscriber to know what variation of sequencing is used in order to
+verify the sequences of updates.</p>
 </div>
 <div class="paragraph">
 <p>The <strong>SASS2</strong> header includes <strong>MSG_TYPE</strong>, <strong>REC_TYPE</strong>, <strong>SEQ_NO</strong>, <strong>REC_STATUS</strong>.
@@ -808,14 +809,14 @@ a a long disruption in the subscriptions that were dropped.</p>
 <div class="paragraph">
 <p>The advantages of <strong>SASS2</strong> are that it is a low overhead system without a lot of
 subscription management traffic during normal operation.  The successor to
-<strong>SASS2</strong>, called <strong>SASS3</strong>, adds reassert type messages and each client publishes
-these on a randomized interval.  The <strong>_INBOX.hostip.DAEMON</strong> is no longer
-supported since the Tibco archetecture introduced subject based routers (rvrd)
-where the network <strong>IP</strong> addresses may be using <strong>NAT</strong> translation between
+<strong>SASS2</strong>, called <strong>SASS3</strong>, adds reassert type messages and each subscriber
+publishes these on a randomized interval.  The <strong>_INBOX.hostip.DAEMON</strong> is no
+longer supported since the Tibco archetecture introduced subject based routers
+(rvrd) where the network <strong>IP</strong> addresses may be using <strong>NAT</strong> translation between
 segments or may not be directly reachable through <strong>IP</strong> routers.  When these are
 present, the <strong>_INBOX</strong> addresses used for point to point communication are
 modified as they progress through the <strong>rvrd</strong> routers.  For example, a
-<strong>_INBOX.hostip.timestamp.N</strong> client endpoint is modified to be
+<strong>_INBOX.hostip.timestamp.N</strong> subscriber endpoint is modified to be
 <strong>_INBOX.routerip.timestamp._INBOX.hostip.timestamp.N</strong>.  This type of
 infrastructure using <strong>rvrd</strong> is uncommon.  Reuters used its own method for
 connecting across network boundaries through the use of it&#8217;s market data hub
@@ -851,12 +852,12 @@ data platform and evolved into <strong>RV</strong>.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The <strong>sub</strong> and <strong>id</strong> fields identify the subject and the client making the
+<p>The <strong>sub</strong> and <strong>id</strong> fields identify the subject and the subscriber making the
 subscription, the optional return field requests that an inital response is
 desired.  In recent versions of the Tibrv API, it is not possible to specify
 the return field in a subscription request.  The <strong>refcnt</strong> is incremented and
-decremented by the same client <strong>id</strong> starting the same subscription.  This is
-uncommon since most client Tib APIs will not allow this.</p>
+decremented by the same subscriber <strong>id</strong> starting the same subscription.  This
+is uncommon since most Tib APIs will not allow this.</p>
 </div>
 </div>
 <div class="sect3">
@@ -876,8 +877,8 @@ uncommon since most client Tib APIs will not allow this.</p>
 <p>The snapshot image is returned to the <strong>_INBOX</strong> address.  The optional flags can
 additionally specify that a subscription should start (flags = 6, the same as
 the <strong>T</strong> flag in <strong>SASS3</strong> request described below).  This allows Tibrv API
-clients to request an initial value with a return <strong>_INBOX</strong>, which is no longer
-possible with the <strong>LISTEN.START</strong> message when using the Tibrv API.</p>
+subscriber to request an initial value with a return <strong>_INBOX</strong>, which is no
+longer possible with the <strong>LISTEN.START</strong> message when using the Tibrv API.</p>
 </div>
 </div>
 <div class="sect3">
@@ -904,7 +905,7 @@ possible with the <strong>LISTEN.START</strong> message when using the Tibrv API
 <h4 id="_sass3_subscription_request"><strong>SASS3</strong> Subscription Request</h4>
 <div class="paragraph">
 <p>A well known endpoint is defined for each service on a subject domain, for
-example, <strong>_SASS.NASDAQ.SUB</strong>.  This message is published by the client for
+example, <strong>_SASS.NASDAQ.SUB</strong>.  This message is published by the subscriber for
 subscription operations:</p>
 </div>
 <div class="literalblock">
@@ -912,7 +913,7 @@ subscription operations:</p>
 <pre>_SASS.svc.SUB : {
   return : _INBOX.hostip.timestamp.N,
   data : {
-    M : magic,
+    M : sub_magic,
     T : flags,
     A : {
       U : user,
@@ -926,9 +927,9 @@ subscription operations:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The <strong>S</strong> and <strong>A</strong> fields identify the subject and the client making the
-subscription, and the <strong>T</strong> flags is a bit mask identifing what operation is
-requested:</p>
+<p>The <strong>sub_magic</strong> is always the value 23176.  The <strong>S</strong> and <strong>A</strong> fields identify the
+subject and the subscriber making the subscription, and the <strong>T</strong> flags is a bit
+mask identifing what operation is requested:</p>
 </div>
 <table class="tableblock frame-all grid-cols stretch">
 <colgroup>
@@ -966,12 +967,12 @@ requested:</p>
 <p>The <strong>A</strong> field is commonly combined into a string as <strong>user@host/program#pid</strong>.
 This endpoint merges the basic subscription operations: Subscription,
 Subscription Image, Snapshot, Refresh Image, Subscription Reassert,
-Unsubscribe.  The advantages of a <strong>SASS3</strong> request are that the client is
+Unsubscribe.  The advantages of a <strong>SASS3</strong> request are that the subsccriber is
 identified by a readable string rather than a hostip and timestamp and that
 many of the operators for asserting subscriptions are combined into one
 publish.  The disadvantage is that the service endpoint needs to be defined and
-the host field does not need to identify the IP address of the client making
-the request.</p>
+the host field does not need to identify the IP address of the subscribers
+making the request.</p>
 </div>
 </div>
 </div>
@@ -1010,7 +1011,7 @@ subscription state.</p>
 </div>
 <div class="paragraph">
 <p>There are two queries to obtain the state of subscriptions, the session
-query and the subscription query.  The session query lists the client
+query and the subscription query.  The session query lists the subscriber
 sessions attached to a daemon.  The subscription query lists the subject
 attached to a session(s).</p>
 </div>
@@ -1085,7 +1086,7 @@ for reassert:</p>
 <pre>_SASS.svc.SUB : {
   return : _INBOX.hostip.timestamp.N,
   data : {
-    M : magic,
+    M : sub_magic,
     T : RESUBSCRIBE_FLAG,
     A : {
       U : user,
@@ -1112,7 +1113,7 @@ return subject:</p>
 <div class="content">
 <pre>_INBOX.hostip.timestamp.N : {
   data : {
-    M : magic,
+    M : pub_magic,
     I : 0x20,
     T : VERIFY,
     S : OK,
@@ -1130,7 +1131,7 @@ return subject:</p>
 advantage of <strong>SASS3</strong> is that the status of the subscriptions can be updated by
 the manager as a list.  The <strong>T</strong> and the <strong>S</strong> fields are derived from the
 <strong>MSG_TYPE</strong> and <strong>REC_STATUS</strong> fields of the updates.  The <strong>SASS2</strong> passive method
-allows for simpler clients and both protocols will update the status of the
+allows for simpler subscribers and both protocols will update the status of the
 subjects via update publishes.</p>
 </div>
 </div>
@@ -1140,7 +1141,7 @@ subjects via update publishes.</p>
 <div class="paragraph">
 <p>In all cases the initial value is sent point to point using the return argument
 provided by the subscrtion start.  The first subject that is subscribed by a
-<strong>RV</strong> client when the connection is established to the daemon is the
+<strong>RV</strong> subscriber when the connection is established to the daemon is the
 <strong>_INBOX.hostip.timestamp.&gt;</strong> subject, which is globably unique in the <strong>rvd</strong>
 subject domain (but not in rvrd&#8217;s).  All of the return values normally contain
 this prefix, since the subscription is already started.  When an inbox is
@@ -1157,16 +1158,16 @@ guarenteed.</p>
 <div class="paragraph">
 <p>The message arriving using the return subject does not contain the original
 subscription subject, so this mapping of <strong>_INBOX</strong> string to subject must be
-maintained by the client.  The <strong>SASS</strong> header <strong>MSG_TYPE</strong> is usually modified by
-the publisher to indicate what kind of data is present, either <strong>INITIAL</strong> of
+maintained by the subscriber.  The <strong>SASS</strong> header <strong>MSG_TYPE</strong> is usually modified
+by the publisher to indicate what kind of data is present, either <strong>INITIAL</strong> of
 <strong>SNAPSHOT</strong> is a normal response, and others have special status, <strong>TRANSIENT</strong> is
 used for not found or not available, <strong>DROP</strong> is used when a subject is expired
-and no longer available, <strong>VERIFY</strong> is used to prepare the client for updates.
-In addition, the <strong>REC_STATUS</strong> field may contain <strong>STALE</strong> for out of date
-records, <strong>NOT_FOUND</strong> when no record is present, <strong>TEMP_UNAVAIL</strong>, <strong>BAD_NAME</strong>,
-<strong>BAD_LINE</strong>, <strong>FEED_DOWN</strong> for publisher errors that are not normal.  Other values
-can be used by the publishers, depending on the data source and the publisher
-implementation.</p>
+and no longer available, <strong>VERIFY</strong> is used to prepare the subscriber for
+updates.  In addition, the <strong>REC_STATUS</strong> field may contain <strong>STALE</strong> for out of
+date records, <strong>NOT_FOUND</strong> when no record is present, <strong>TEMP_UNAVAIL</strong>,
+<strong>BAD_NAME</strong>, <strong>BAD_LINE</strong>, <strong>FEED_DOWN</strong> for publisher errors that are not normal.
+Other values can be used by the publishers, depending on the data source and
+the publisher implementation.</p>
 </div>
 <div class="paragraph">
 <p>A normal return value is:</p>
@@ -1178,7 +1179,7 @@ implementation.</p>
   REC_TYPE : NMTS,
   SEQ_NO : 1001,
   REC_STATUS : OK,
-  &lt;other data fields&gt;
+  &lt;msg data&gt;
 }</pre>
 </div>
 </div>
@@ -1227,7 +1228,7 @@ value:</p>
 <div class="literalblock">
 <div class="content">
 <pre>_INBOX.hostip.timestamp.N : {
-  M : magic,
+  M : pub_magic,
   T : INITIAL,
   S : OK
   D : {
@@ -1237,8 +1238,8 @@ value:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The <strong>T</strong> field is equivalent to the <strong>MSG_TYPE</strong> field and the <strong>S</strong> field is
-equivalent to the <strong>REC_STATUS</strong> field.</p>
+<p>The <strong>pub_magic</strong> is always the value 23177.  The <strong>T</strong> field is equivalent to the
+<strong>MSG_TYPE</strong> field and the <strong>S</strong> field is equivalent to the <strong>REC_STATUS</strong> field.</p>
 </div>
 <div class="paragraph">
 <p>A Not Found return value is:</p>
@@ -1246,7 +1247,7 @@ equivalent to the <strong>REC_STATUS</strong> field.</p>
 <div class="literalblock">
 <div class="content">
 <pre>_INBOX.hostip.timestamp.N : {
-  M : magic,
+  M : pub_magic,
   T : TRANSIENT,
   S : NOT_FOUND
 }</pre>
@@ -1258,7 +1259,7 @@ equivalent to the <strong>REC_STATUS</strong> field.</p>
 <div class="literalblock">
 <div class="content">
 <pre>_INBOX.hostip.timestamp.N : {
-  M : magic,
+  M : pub_magic,
   T : INITIAL,
   S : STALE,
   D : {
@@ -1271,7 +1272,65 @@ equivalent to the <strong>REC_STATUS</strong> field.</p>
 </div>
 <div class="sect2">
 <h3 id="_update_publish">Update Publish</h3>
-
+<div class="paragraph">
+<p>Updates are multicast to the subscription.  These are delta changes to the
+initial value.  It may be an <strong>INITIAL</strong> indicating all fields are present or
+some other type with a subset of the fields.  An <strong>INITIAL</strong> is often used when
+the publisher adds or removes a field from the initial value, or wants to
+ensure that the subscribers are up to date by publishing the inital on a timer.</p>
+</div>
+<div class="paragraph">
+<p>A <strong>SASS2</strong> update contains the same header as the initial with the <strong>MSG_TYPE</strong>
+usually set to <strong>UPDATE</strong> or a status that is has additional semantics to that,
+such as <strong>CORRECT</strong> or <strong>CLOSING</strong>.</p>
+</div>
+<div class="sect3">
+<h4 id="_sass2_update">SASS2 Update</h4>
+<div class="literalblock">
+<div class="content">
+<pre>NASDAQ.REC.INTC.O : {
+  MSG_TYPE : UPDATE,
+  REC_TYPE : NMTS,
+  SEQ_NO : 1002,
+  REC_STATUS : OK,
+  &lt;msg data&gt;
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sass3_update">SASS3 Update</h4>
+<div class="literalblock">
+<div class="content">
+<pre>NASDAQ.REC.INTC.O : {
+  M : pub_magic,
+  T : UPDATE,
+  S : OK,
+  D : {
+    &lt;msg data&gt;
+  }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <strong>SASS3</strong> case may omit the <strong>T</strong> and <strong>S</strong> fields as they default to these
+values when not present.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_drop_notification">Drop Notification</h3>
+<div class="paragraph">
+<p>A <strong>MSG_TYPE</strong> which contains a <strong>DROP</strong> code indicates that the publisher is not
+going to update a subject.  The subscription itself stays open until the
+subscriber closes it.  When the <strong>REC_STATUS</strong> contains the status for
+<strong>NOSUBSCRIBERS</strong>, the publisher has no active subscribers in the subscription
+management database and reasserting the subscription will restart it.  This
+case is rarely seen by subscribers unless they are using a wildcard.  All the
+other <strong>REC_STATUS</strong> codes can only be reestablished by reasserting when the
+subject state is reinitialized.  The subscriber can try, but the result is
+usually a <strong>NOT_FOUND</strong> status.</p>
+</div>
 </div>
 </div>
 </div>
@@ -1323,7 +1382,7 @@ early caching systems by Tibco, to RFC, to open source.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-03-04 03:42:18 -0800
+Last updated 2021-03-04 05:13:41 -0800
 </div>
 </div>
 </body>
