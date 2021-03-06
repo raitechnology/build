@@ -524,7 +524,7 @@ provided by the Tib APIs, it is incrmenting an integer and appending it to the
 base after the timestamp, for example *_INBOX.hostip.timestamp.2*.  The
 *_INBOX.hostip* prefix also causes the subject to be routed over point to point
 links instead of multicast.  Since the *IP* routing and the reliability of the
-protocols is defined for each stream type, the point to point and mcast
+protocols is defined for each stream type, the point to point and multicast
 messages arrive independent of one another, no ordering between them is
 guarenteed.
 
@@ -771,10 +771,10 @@ of a password which may be unique to *user1* and the password is not stored on
 any node.
 
   HA0 = SHA256( user1 + service1 + password )
-  HA1 = SHA256( HA0 + nonce )
+  HA1 = SHA256( HA0 + NONCE )
 
 Each message can then be authenticated to be published from the node using
-*user1.nonce* as the session prefix and using the *HA1* hash as the key in a
+*user1.NONCE* as the session prefix and using the *HA1* hash as the key in a
 *HMAC* with the subject and message data resulting in the *HA2* hash.
 
   HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
@@ -783,7 +783,7 @@ Each message can then be authenticated to be published from the node using
 The result is a *HMAC* authenticated message:
 
   subject : {
-    session : user1.nonce,
+    session : user1.NONCE,
     seqno : sequence,
     digest : digest_bits,
     data {
@@ -794,74 +794,175 @@ The result is a *HMAC* authenticated message:
 When the subscriber recieves this message, it is verified by:
 
   - The *seqno* must be greater than the *subjects* last message published by
-    the *user1.nonce* session to protect against replays.
+    the *user1.NONCE* session to protect against replays.
 
   - The *user1.service1* must exist in the node database so that *HA0* can be
-    computed to *HA1* using the session's *nonce* and that can be used to
+    computed to *HA1* using the session's *NONCE* and that can be used to
     verify the *digest*.
 
   - The *digest* can be recomputed using *HA0*, *HA1* and *HA2* by:
   
-  HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
   HA0 = node_database[ user1.service1 ]
-  HA1 = SHA256( HA0 + nonce )
+  HA1 = SHA256( HA0 + NONCE )
+  HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
   hmac-result = HMAC_AES( K = HA1, MSG = HA2 )
 
 To authenticate the message came from *user1.service1*, compare *hmac-result*
 with *digest* in the message.  Since *HA2* is a property of the message, it can
 be used to encode the *HMAC* for other transport endpoints.  *HA1* is a hash of
-*HA0* and a *nonce* which is unique to the session endpoint for *user1*, it can
-be computed when the session starts.  For each unique publisher that a
-subscriber encounters, a *HA1* hash can be computed and cached with the
-transport when more messages are expected to be published from the same
-session.  This reduces the cost of authentication to a *AES_HASH* of the
-message data and a *HMAC_AES* digest computation, and both can be accelerated
-using *AES* instructions built into the CPU.
+*HA0* and a *NONCE* which is unique to the session endpoint for *user1*, it can
+be computed when the session starts.
 
+A *HA1* hash can be computed and cached with the transport when more messages
+are expected to be published from the same session.  This reduces the cost of
+authentication to a *AES_HASH* of the message data and a *HMAC_AES* digest
+computation, and both can be accelerated using *AES* instructions built into
+the CPU.
+
+This authentication from a publisher can only be trusted after a trust exchange
+between each subscriber and pubisher, since an attacker can replay old messages
+of a publisher that is no longer active.
+
+When a publisher detects a new subscriber, this exchange ensures that old
+messages are not replayed and the subscriber and publisher can trust
+eachother.  More on the <<Session>> messages below.  This heartbeat is
+sent by each active node and can be used by other nodes to create trust
+bonds:
+
+  _SESSION.HELLO : {
+    session : newuser1.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    ucast_url : pgm://host:port,
+    time : utc_usecs,
+    interval : secs,
+    cnonce : CNONCE
+  }
+
+After verifying newuser1 is ok and is not a replay of old session by checking
+the *newuser1.NONCE*, *seqno* and the *utc_usecs* compared with the system
+clock, a *HMAC* is computed with the information from the subscriber and the
+publisher, creating a trust bond from *publisher1* to *newuser1*.
+
+  HA0 = SHA256( publisher1 + service1 + password )
+  HA1 = SHA256( HA0 + NONCE + utc_usecs + CNONCE )
+  HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
+  auth_digest = HMAC_AES( K = HA1, MSG = HA2 )
+
+This is the message that *publisher1* uses to validate itself to *newuser1*:
+
+  _INBOX.newuser1.NONCE.auth : {
+    session : publisher1.NONCE,
+    seqno : sequence,
+    digest : auth_digest,
+    auth_time : utc_usecs,
+    time : utc_usecs,
+    cnonce : CNONCE
+  }
+
+The *auth_time* is the time that the *_SESSION.HELLO* was sent so that the
+subscriber has a record of sending it with the *CNONCE*.  *Newuser1* is still
+not trusted by *publisher1*, only the reverse direction.  This isn't useful for
+an attacker since messages published from *newuser1.NONCE* will be discarded
+until it is trusted.
+
+*Newuser1* needs to validate itself to *publisher1* using the *auth* message
+sent from *publisher1.NONCE*, via the *time* and the *CNONCE* fields from
+*_INBOX.newuser1.NONCE.auth* above:
+
+  HA0 = SHA256( newuser1 + service1 + password )
+  HA1 = SHA256( HA0 + NONCE + utc_usecs + CNONCE )
+  HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
+  auth_digest = HMAC_AES( K = HA1, MSG = HA2 )
+
+  _INBOX.publisher1.NONCE.auth : {
+    session : newuser1.NONCE,
+    seqno : sequence,
+    digest : auth_digest,
+    auth_time : utc_usecs,
+    time : utc_usecs,
+    cnonce : CNONCE
+  }
+
+After this exchange, the *newuser1* adds the *publisher1.NONCE* to the trusted
+list and *publisher1* adds *newuser1.NONCE*.  It is critical that *NONCE* uses
+enough entropy and bits to be unique through the lifetime of the network to
+protect from replays.
+
+If an old message is replayed:
+
+  old_subject : {
+    session : oldpublisher1.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+  }
+
+The subscribers of this message either have a record of the last *seqno* used
+by *oldpublisher1.NONCE*, or they have never created an auth bond to trust
+*oldpublisher1.NONCE*.
 
 [[Format]]
 Message Presentation
 --------------------
 
-The text base that is most natural is a relaxed version of *JSON* used in
+A texted based messaging system coexists well within *NATS*, *Redis*, and
+*Http*, but binary formats can also coexist within the same transport.  The
+text base that is most natural is a relaxed version of *JSON* used in
 javascript.  The recursive field value notation of objects is compatable with
 recursive self describing messaging binary formats.  The header fields required
 should be limited to strings and integers so that *RV* message format can be
 used without loss of semantics.  The other types of fields, such as dates,
-times, decimals, etc, should have a field dictionary in order to transform
-from *JSON* strings without losing information.
+times, decimals, etc, should have a field dictionary in order to transform from
+*JSON* strings without losing information.
+
+Binary Messages
+~~~~~~~~~~~~~~~
+
+These message formats can be extened by adding codecs.  These codecs are
+recognized, in addition to *JSON*:
+
+[grid="cols",cols="1,1,4",options="header"]
+|====
+| Format     | Type                  | Description
+| tib_sass   | SASS Qform            | Fid fixed size value (except partials)
+| tibmsg     | TibMsg                | Self describing extends SASS Qfrom
+| rvmsg      | RvMsg                 | Self describing
+| marketfeed | Marketfeed            | Fid value
+| rwf        | Refinitiv Wire Format | Fid value, impl. Open Message Model
+|====
 
 Protocol Initialization
 -----------------------
 
 A session should be initialized at the start with a session and an inbox.
 
-Bert and Ernie
-~~~~~~~~~~~~~~
+Sam and Paul
+~~~~~~~~~~~~
 
-The users used below are bert and ernie, where bert is the subscriber and ernie
-is the publisher.
+In the example messages below, there are two users, Sam and Paul.  Sam is
+the subscriber and Paul is the publisher.  A visual reference :)
+
+image:sam_and_paul.svg[Sam and Paul]
 
 Inbox Subjects
 ~~~~~~~~~~~~~~
 
-A subscribion to an inbox endpoint, which made of an inbox prefix, a user
-id, and a random or time based nonce.  A random nonce is preferred so that the
-system clock is not used for uniqueness and authenticating.
+A subscribion to an inbox endpoint, which made of an inbox prefix, a user id,
+and a random *NONCE*.
 
 An *RV* based inbox is based on the host ip address, the system clock in
 seconds, the process id, and an address in the process space.  If the system
 clock is reset, such as a machine rebooting, it is possible that it will
-repeat.  The other systems can use other means.  A subject compatible user id
-is mobile and does not need to be tied to a single host ip address.  The nonce
-can be derived from a random source with enough bits, it can provide sufficient
-uniqueness and security for authentication.
+repeat.  A subject compatible user id is mobile and does not need to be tied to
+a single host ip address.  The *NONCE* can be derived from a random source with
+enough bits, it can provide sufficient uniqueness and security for
+authentication.
 
 If another transport is used for *_INBOX* point to point messages, that can be
 specified in the session messages.  Since the *TCP* based protocols are by
-their nature point to point, this only applies to *UDP* mcast trasports like
+their nature point to point, this only applies to *UDP* multicast trasports like
 *OpenPGM*.  The *_INBOX* subjects are unique in the subject space, so they
-can be mcast.
+can be multicast.
 
   _INBOX.USER.NONCE.>
 
@@ -869,53 +970,48 @@ This endpoint is used when a message is sent from node to node.  A return
 can be truncated to subject without the prefix:
 
   _SNAP.subject : {
-    session : bert.NONCE,
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
-    return : 1
+    return : 1,
+    format : json
   }
 
-In this case, the return would be the *_INBOX.bert.NONCE.1*.  If a full subject
-is desired instead of the inbox session, a *return_sub* field can be used
-instead of a *return*.
+In this case, the return would be the *_INBOX.sam.NONCE.1*.
 
-  _SNAP.subject : {
-    session : bert.NONCE,
-    seqno : sequence,
-    digest : digest_bits,
-    return_sub : ANOTHER.SUBJECT
-  }
-
+[[Session]]
 Session Notification
 ~~~~~~~~~~~~~~~~~~~~
 
 A publish to a well known subject indicating a session start.
 
   _SESSION.HELLO : {
-    session : bert.NONCE,
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
     ucast_url : pgm://host:port,
     time : utc_usecs,
-    interval : secs
+    interval : secs,
+    cnonce : CNONCE
   }
 
 The interval is a heartbeat that keeps the sessions subscriptions alive.
 
   _SESSION.HB : {
-    session : bert.NONCE,
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
     ucast_url : pgm://host:port,
     time : utc_usecs,
-    interval : secs
+    interval : secs,
+    cnonce : CNONCE
   }
 
 And session stop notification causes the publishers to drop the subscriptions
 associated with the session.
 
   _SESSION.BYE : {
-    session : bert.NONCE,
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
   }
@@ -929,15 +1025,16 @@ so that the subcribers are informed of progress by the publishers.
 Subscription Notification
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A subscription *start*:
+A subscription start:
 
   _SUB.START.subject : {
-    session : bert.NONCE,
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
     return : 1,
     initial : true,
     ack : true,
+    format : json,
     expires : secs
   }
 
@@ -946,13 +1043,18 @@ after the last *_SESSION.HB* was seen by the publishers.  The *return* field is
 specified if an initial value is wanted indicated by the *initial* field.  An
 *ack* can be requested to notify that the subscription was seen by a publisher.
 This would be useful when the subscription is expected to take some time or if
-no initial is desired.
+no initial is desired.  The *format* is a request that may not be honored if
+the publisher does not use it or if there are other subscriptions started with
+a different format.  The *initial* will have a format present that can be
+honored.  If a *dictionary* is needed to decode the message data, then that is
+also present.  This is described in <<dictionary>> section.
 
 An *ack*:
 
-  _INBOX.bert.NONCE.1 : {
-    session : ernie.NONCE,
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
     seqno : sequence,
+    digest : digest_bits,
     type : start,
     subject : subject,
     status : ack
@@ -960,11 +1062,14 @@ An *ack*:
 
 An *initial* value:
 
-  _INBOX.bert.NONCE.1 : {
-    session : ernie.NONCE,
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
     seqno : sequence,
+    digest : digest_bits,
     type : start,
     subject : subject,
+    format : json,
+    dictionary : json,
     data : {
       <msg data>
     }
@@ -973,18 +1078,18 @@ An *initial* value:
 A subscription *stop*:
 
   _SUB.STOP.subject : {
-    session : bert.NONCE,
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
     return : 1,
     ack : true
   }
 
-Like a subscription, a stop can request an *ack* return so that bert knows
-that the publisher ernie has seen the *stop* message.
+Like a subscription, a stop can request an *ack* return so that Sam knows
+that the publisher Paul has seen the *stop* message.
 
-  _INBOX.bert.NONCE.1 : {
-    session : ernie.NONCE,
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
     type : stop,
@@ -992,30 +1097,64 @@ that the publisher ernie has seen the *stop* message.
     status : ack
   }
 
+Wildcard Subscription
+~~~~~~~~~~~~~~~~~~~~~
+
+Since wildcards are not allowed in publishes within *NATS* and the method of
+matching wildcards is different between *Redis* and the *RV* based systems,
+a wildcard start has it's own notification.
+
+A wildcard subscription start:
+
+ _PSUB.START.prefix._ : {
+    session : sam.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    expires : secs,
+    subject : prefix.>
+    pattern : (?s)\Aprefix.
+ }
+
+A wildcard subscription stop:
+
+ _PSUB.STOP.prefix._ : {
+    session : sam.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    expires : secs,
+    subject : prefix.>
+    pattern : (?s)\Aprefix.
+ }
+
+The prefix is the the part of the subject which matches the *RV* prefix
+segments, and the pattern is a *PCRE* based match.  This allows multiple
+wildcard regimes to coexist across different platforms and more complex pattern
+matching.
+
 Reassert Subscription
 ~~~~~~~~~~~~~~~~~~~~~
 
-If the publisher ernie misses a heartbeat from bert, a reassert query message
-can be published to the subscriber bert at a randomized timer in the next
+If the publisher Paul misses a heartbeat from Sam, a reassert query message
+can be published to the subscriber Sam at a randomized timer in the next
 interval.
 
-  _INBOX.bert.NONCE.get_subs : {
-    session : ernie.NONCE,
+  _INBOX.sam.NONCE.get_subs : {
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
-    return : bert.subs,
+    return : sam.subs,
     last_seen : utc_usecs,
     wildcard : >
   }
 
-If bert has subscriptions matching the wildcard since the last_seen time
-(which is relative to bert's own clock, not ernie's), it should resend them to
-ernie.  Bert can maintain a subscription window that expires after serveral
+If Sam has subscriptions matching the wildcard since the last_seen time
+(which is relative to Sam's own clock, not Paul's), it should resend them to
+Paul.  Sam can maintain a subscription window that expires after serveral
 heartbeats are sent.  If the last_seen falls below the window, or is zero, then
 all of the subscriptions are reasserted.
 
-  _INBOX.ernie.NONCE.bert.subs : {
-    session : bert.NONCE,
+  _INBOX.paul.NONCE.sam.subs : {
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
     last_seen : utc_usecs,
@@ -1030,7 +1169,7 @@ all of the subscriptions are reasserted.
     ]
   }
 
-For each subject that ernie publishes, an *ack* is returned to bert as well as
+For each subject that Paul publishes, an *ack* is returned to Sam as well as
 the *initial* since both were specified.  The wildcard is useful since the
 publishers may be listening to only a part of the subject space.
 
@@ -1040,20 +1179,22 @@ Snapshot Request
 A *snapshot* is uses a *_SNAP* prefix to indicate this is a request / reply.
 
   _SNAP.subject : {
-    session : bert.NONCE,
+    session : sam.NONCE,
     seqno : sequence,
     digest : digest_bits,
     return : 1,
+    format : json
   }
 
 The value returned would be a *snapshot* value:
 
-  _INBOX.bert.NONCE.1 : {
-    session : ernie.NONCE,
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
     type : snap,
     subject : subject,
+    format : json,
     data : {
       <msg data>
     }
@@ -1065,11 +1206,11 @@ Update Messaging
 Update Publish
 ~~~~~~~~~~~~~~
 
-The updates are mcast to the subject of the subscription.  An update is
+The updates are multicast to the subject of the subscription.  An update is
 implied when a *type* field is not present.
 
   subject : {
-    session : ernie.NONCE,
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
     data : {
@@ -1080,11 +1221,11 @@ implied when a *type* field is not present.
 Drop Notification
 ~~~~~~~~~~~~~~~~~
 
-When a publisher has no subscribers left, a *drop* notification is mcast to
+When a publisher has no subscribers left, a *drop* notification is multicast to
 the subject.  The status is the reason for the drop.
 
   subject : {
-    session : ernie.NONCE,
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
     type : drop
@@ -1097,8 +1238,8 @@ Not Found Notification
 When an *initial* or a *snapshot* is reqeusted, the not found response is
 sent as a reply.
 
-  _INBOX.bert.NONCE.1 : {
-    session : ernie.NONCE,
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
     type : snap,
@@ -1113,7 +1254,7 @@ These are forms of an update where the publisher knows that multiple messages
 are lost or merged into one update.
 
   subject : {
-    session : ernie.NONCE,
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
     status : conflated,
@@ -1130,7 +1271,7 @@ out of order, since the the source has changed.  An update may be published
 with the fields that are recapped having arrived within the configured period.
 
   subject : {
-    session : ernie.NONCE,
+    session : paul.NONCE,
     seqno : sequence,
     digest : digest_bits,
     type : recap
@@ -1143,41 +1284,108 @@ with the fields that are recapped having arrived within the configured period.
 Type and Status Usage
 ---------------------
 
-The default values of type and status are *update* and *ok*.  The following are
-the most useful of the type/status combinations.  There are many more status
-codes that are defined, but are rarely used.  The type enumeration is the most
-complete.  The caching semantics of *initial*, *drop*, *update*, *verify*,
-*snap* are well defined without the need for other operators.  A *transient*
-operator is the same as a status without message data.
+A type and status are optionally used by publishers to indicate how the message
+should be handled.  The default values of type and status are *update* and
+*ok*.  The following are the most useful of the type/status combinations.
+There are many more status codes that are defined, but are rarely used.  The
+type enumeration is the most complete.  The caching semantics of *initial*,
+*drop*, *update*, *verify*, *snap* are well defined without the need for other
+operators.  A *transient* operator is the same as a status without message
+data.  A source of *bad_name* status is a translation from subject to
+instrument failure, creating an incompatible *RV* subject, such as empty
+segments created by multiple '.' concatenated.  A *bad_access* status is the
+result of a request that creates an invalid instrument name. The *temp_unavail*
+is the result of an unresponsive publisher, when a timer expires or when there
+is corruption in a database that was taken offline.  A *perm_denied* is an
+explicit denial because the request doesn't have the required permissions.
 
 [grid="cols",cols="1,1,4",options="header"]
 |====
-|type    | status        | text
-|start   | ack           | ack requested with start request
-|stop    | ack           | ack requested with stop request
-|snap    | ok            |
-| "      | not_found     | message not cached
-| "      | temp_unavail  | subject timed out or connectivity issue
-| "      | bad_access    | subject rejected by source
-| "      | bad_name      | subject naming scheme incompatable with source
-| "      | stale         | value is old, incomplete
-|initial | ok            |
-| "      | verify        | message was reinitialized
-| "      | not_found     | message not cached
-| "      | temp_unvail   | subject timed out or connectivity issue
-| "      | bad_access    | subject rejected by source
-| "      | bad_name      | subject naming scheme incompatable with source
-| "      | stale         | value is old, incomplete
-| "      | conflated     | message merged updates
-| "      | feed_switch   | new publisher, may have missing updates
-|drop    | nosubscribers | no subscribers left
-| "      | expired       | the publisher is no longer updating subject
-| "      | relocate      | new subject name
-| "      | preempted     | cache full, message discarded
-|update  | ok            |
-| "      | stale         | updating stale message
-| "      | conflated     | message merged updates
-| "      | feed_down     | subject source is offline
-|verify  | ok            | update that clears or validates fields
+| Type    | Status        | Description
+| start   | ack           | Ack requested with start request
+| stop    | ack           | Ack requested with stop request
+| snap    | ok            |
+|  "      | not_found     | Message not cached
+|  "      | temp_unavail  | Subject timed out or connectivity issue
+|  "      | bad_access    | Subject rejected by source
+|  "      | bad_name      | Subject naming scheme incompatable with source
+|  "      | feed_down     | Subject source is offline, value is stale
+|  "      | stale         | Value is old, incomplete
+|  "      | perm_denied   | Subscriber permission denied
+| initial | ok            |
+|  "      | verify        | Message was reinitialized
+|  "      | not_found     | Message not cached
+|  "      | temp_unvail   | Subject timed out or connectivity issue
+|  "      | bad_access    | Subject rejected by source
+|  "      | bad_name      | Subject naming scheme incompatable with source
+|  "      | stale         | Value is old, incomplete
+|  "      | conflated     | Message merged updates
+|  "      | feed_down     | Subject source is offline, value is stale
+|  "      | feed_switch   | New publisher, may have missing updates
+|  "      | perm_denied   | Subscriber permission denied
+| drop    | nosubscribers | No subscribers left
+|  "      | expired       | The publisher is no longer updating subject
+|  "      | relocate      | New subject name
+|  "      | preempted     | Cache full, message discarded
+| update  | ok            |
+|  "      | stale         | Updating stale message
+|  "      | conflated     | Message merged updates
+|  "      | feed_down     | Subject source is offline, value is stale
+|  "      | temp_unvail   | Subject timed out or connectivity issue
+|  "      | bad_access    | Subject rejected by source
+|  "      | bad_name      | Subject naming scheme incompatable with source
+|  "      | perm_denied   | Subscriber permission denied
+| verify  | ok            | Update that clears or validates fields
 |====
+
+[[dictionary]]
+Dictionaries
+------------
+
+Some message formats require a dictionary to decode.  When a message from a
+publisher sends one of these formats, it will have a dictionary field in the
+*initial* and the *snap* values sent to the subscribers, with an optional
+dictionary checksum when it is expected to be changed.  If a dictionary is
+modified while the publisher is updating the subject stream, the publisher
+should send an initial with the new dictionary checksum.
+
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    type : start,
+    subject : subject,
+    format : json,
+    dictionary : json,
+    dict_csum : 0x12345678,
+    data : {
+      <msg data>
+    }
+  }
+
+The subscribers must be able to get the dictionary from the publisher using
+the *session* field, constructing a request reply with name and optional
+checksum:
+
+  _INBOX.paul.NONCE.dict : {
+    session : sam.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    dictionary : json,
+    dict_csum : 0x12345678,
+    return : 1
+  }
+
+The response will from this dictionary request:
+
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    dictionary : json
+    dict_csum : 0x12345678,
+    data : {
+      <dictionary>
+    }
+  }
 
