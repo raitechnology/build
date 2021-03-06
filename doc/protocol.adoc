@@ -737,7 +737,9 @@ HMAC Authentication
 
 This security is for the messaging layer to authenticate the publisher to the
 subscribers.  The subscribers must be able to trust the messages as unmodified,
-uniquely serialized, and authentic.
+uniquely serialized, and authentic.  These methods are adapted from
+link:https://en.wikipedia.org/wiki/Digest_access_authentication[Digest access
+authentication].
 
 A *HMAC* can be used to do this.  The user identity, the session instance, and
 the seqno serialization of the subject's messages will be unique to the
@@ -839,10 +841,10 @@ bonds:
     cnonce : CNONCE
   }
 
-After verifying newuser1 is ok and is not a replay of old session by checking
-the *newuser1.NONCE*, *seqno* and the *utc_usecs* compared with the system
-clock, a *HMAC* is computed with the information from the subscriber and the
-publisher, creating a trust bond from *publisher1* to *newuser1*.
+After validating the *newuser1* message it and is not a replay of old session
+by checking the *newuser1.NONCE*, *seqno* and the *utc_usecs* compared with the
+system clock, a *HMAC* is computed with the information from both *newuser1*
+and *publisher1*, creating a trust bond from *publisher1* to *newuser1*.
 
   HA0 = SHA256( publisher1 + service1 + password )
   HA1 = SHA256( HA0 + NONCE + utc_usecs + CNONCE )
@@ -861,7 +863,7 @@ This is the message that *publisher1* uses to validate itself to *newuser1*:
   }
 
 The *auth_time* is the time that the *_SESSION.HELLO* was sent so that the
-subscriber has a record of sending it with the *CNONCE*.  *Newuser1* is still
+*newuser1* has a record of sending it with the *CNONCE*.  *Newuser1* is still
 not trusted by *publisher1*, only the reverse direction.  This isn't useful for
 an attacker since messages published from *newuser1.NONCE* will be discarded
 until it is trusted.

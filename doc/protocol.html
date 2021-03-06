@@ -1448,7 +1448,9 @@ transport is not a part of the security methods described here.</p>
 <div class="paragraph">
 <p>This security is for the messaging layer to authenticate the publisher to the
 subscribers.  The subscribers must be able to trust the messages as unmodified,
-uniquely serialized, and authentic.</p>
+uniquely serialized, and authentic.  These methods are adapted from
+<a href="https://en.wikipedia.org/wiki/Digest_access_authentication">Digest access
+authentication</a>.</p>
 </div>
 <div class="paragraph">
 <p>A <strong>HMAC</strong> can be used to do this.  The user identity, the session instance, and
@@ -1590,10 +1592,10 @@ bonds:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>After verifying newuser1 is ok and is not a replay of old session by checking
-the <strong>newuser1.NONCE</strong>, <strong>seqno</strong> and the <strong>utc_usecs</strong> compared with the system
-clock, a <strong>HMAC</strong> is computed with the information from the subscriber and the
-publisher, creating a trust bond from <strong>publisher1</strong> to <strong>newuser1</strong>.</p>
+<p>After validating the <strong>newuser1</strong> message it and is not a replay of old session
+by checking the <strong>newuser1.NONCE</strong>, <strong>seqno</strong> and the <strong>utc_usecs</strong> compared with the
+system clock, a <strong>HMAC</strong> is computed with the information from both <strong>newuser1</strong>
+and <strong>publisher1</strong>, creating a trust bond from <strong>publisher1</strong> to <strong>newuser1</strong>.</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -1620,7 +1622,7 @@ auth_digest = HMAC_AES( K = HA1, MSG = HA2 )</pre>
 </div>
 <div class="paragraph">
 <p>The <strong>auth_time</strong> is the time that the <strong>_SESSION.HELLO</strong> was sent so that the
-subscriber has a record of sending it with the <strong>CNONCE</strong>.  <strong>Newuser1</strong> is still
+<strong>newuser1</strong> has a record of sending it with the <strong>CNONCE</strong>.  <strong>Newuser1</strong> is still
 not trusted by <strong>publisher1</strong>, only the reverse direction.  This isn&#8217;t useful for
 an attacker since messages published from <strong>newuser1.NONCE</strong> will be discarded
 until it is trusted.</p>
@@ -2464,7 +2466,7 @@ checksum:</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-03-06 00:38:09 -0800
+Last updated 2021-03-06 00:56:52 -0800
 </div>
 </div>
 </body>
