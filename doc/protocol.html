@@ -506,6 +506,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#Format">Message Presentation</a>
 <ul class="sectlevel2">
+<li><a href="#_json_text_messages">JSON Text Messages</a></li>
 <li><a href="#_binary_messages">Binary Messages</a></li>
 </ul>
 </li>
@@ -535,6 +536,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_type_and_status_usage">Type and Status Usage</a></li>
 <li><a href="#dictionary">Dictionaries</a></li>
+<li><a href="#_entitlements_2">Entitlements</a></li>
+<li><a href="#_service_discovery">Service Discovery</a></li>
 </ul>
 </div>
 </div>
@@ -1450,7 +1453,9 @@ transport is not a part of the security methods described here.</p>
 subscribers.  The subscribers must be able to trust the messages as unmodified,
 uniquely serialized, and authentic.  These methods are adapted from
 <a href="https://en.wikipedia.org/wiki/Digest_access_authentication">Digest access
-authentication</a>.</p>
+authentication</a> and
+<a href="https://people.eecs.berkeley.edu/~dawnsong/papers/tesla-ndss.pdf">Efficient
+and Secure Source Authentication for Multicast</a>.</p>
 </div>
 <div class="paragraph">
 <p>A <strong>HMAC</strong> can be used to do this.  The user identity, the session instance, and
@@ -1506,8 +1511,8 @@ HA1 = SHA256( HA0 + NONCE )</pre>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
-digest = HMAC_AES( K = HA1, MSG = HA2 )</pre>
+<pre>HA2 = HASH( IV = seqno, MSG = subject + message-data )
+digest = HMAC( K = HA1, MSG = HA2 )</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1681,6 +1686,8 @@ by <strong>oldpublisher1.NONCE</strong>, or they have never created an auth bond
 <div class="sect1">
 <h2 id="Format">Message Presentation</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_json_text_messages">JSON Text Messages</h3>
 <div class="paragraph">
 <p>A texted based messaging system coexists well within <strong>NATS</strong>, <strong>Redis</strong>, and
 <strong>Http</strong>, but binary formats can also coexist within the same transport.  The
@@ -1691,6 +1698,7 @@ should be limited to strings and integers so that <strong>RV</strong> message fo
 used without loss of semantics.  The other types of fields, such as dates,
 times, decimals, etc, should have a field dictionary in order to transform from
 <strong>JSON</strong> strings without losing information.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_binary_messages">Binary Messages</h3>
@@ -1734,8 +1742,139 @@ recognized, in addition to <strong>JSON</strong>:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">rwf</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Refinitiv Wire Format</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reut Wire Format</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fid value, impl. Open Message Model</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>A binary message format header:</p>
+</div>
+<table class="tableblock frame-all grid-cols stretch">
+<colgroup>
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 10%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">magic</th>
+<th class="tableblock halign-left valign-top">size</th>
+<th class="tableblock halign-left valign-top">user</th>
+<th class="tableblock halign-left valign-top">nonce</th>
+<th class="tableblock halign-left valign-top">digest</th>
+<th class="tableblock halign-left valign-top">seqno</th>
+<th class="tableblock halign-left valign-top">opt</th>
+<th class="tableblock halign-left valign-top">optsize</th>
+<th class="tableblock halign-left valign-top">optdata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">opt</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Optional header fields:</p>
+</div>
+<table class="tableblock frame-all grid-cols stretch">
+<colgroup>
+<col style="width: 5%;">
+<col style="width: 20%;">
+<col style="width: 5%;">
+<col style="width: 20%;">
+<col style="width: 5%;">
+<col style="width: 20%;">
+<col style="width: 5%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">code</th>
+<th class="tableblock halign-left valign-top">option</th>
+<th class="tableblock halign-left valign-top">code</th>
+<th class="tableblock halign-left valign-top">option</th>
+<th class="tableblock halign-left valign-top">code</th>
+<th class="tableblock halign-left valign-top">option</th>
+<th class="tableblock halign-left valign-top">code</th>
+<th class="tableblock halign-left valign-top">option</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">type</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">subject</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pattern</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prefix</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wildcard</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">time</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">last_seen</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">query</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">interval</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cnonce</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">format</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">dictionary</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">dict_csum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">expires</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">subs_array</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">17</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">subs_return</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">18</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">19</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">entitlements</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">entitle_csum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">21</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ack_start</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ack_stop</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">23</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">initial</p></td>
 </tr>
 </tbody>
 </table>
@@ -1920,6 +2059,7 @@ also present.  This is described in <a href="#dictionary">Dictionaries</a> secti
   subject : subject,
   format : json,
   dictionary : json,
+  entitlments : group,
   data : {
     &lt;msg data&gt;
   }
@@ -2181,7 +2321,6 @@ with the fields that are recapped having arrived within the configured period.</
   session : paul.NONCE,
   seqno : sequence,
   digest : digest_bits,
-  type : recap
   status : feed_switch
   data  : {
     &lt;msg data&gt;
@@ -2372,6 +2511,11 @@ explicit denial because the request doesn&#8217;t have the required permissions.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feed_switch</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">New publisher, may have missing updates</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">temp_unvail</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Subject timed out or connectivity issue</p></td>
 </tr>
@@ -2463,10 +2607,64 @@ checksum:</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_entitlements_2">Entitlements</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Like a dictionary, the entitlements group is published with <strong>initial</strong> and
+<strong>snap</strong> messages:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>_INBOX.sam.NONCE.1 : {
+  session : paul.NONCE,
+  seqno : sequence,
+  digest : digest_bits,
+  type : start,
+  subject : subject,
+  format : json,
+  entitlement: group,
+  entitle_csum : 0x12345678,
+  data : {
+    &lt;msg data&gt;
+  }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Entitlements are advisory, the subscriber expected to notify the subscription
+activity with an entitlements service:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>_ENTITLE.subject : {
+  session : sam.NONCE,
+  seqno : sequence,
+  digest : digest_bits,
+  type : start
+}</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_service_discovery">Service Discovery</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A optional special endpoint that can update the configuration during operation
+to provide the ability to add or remove services, users, entitlements as needed
+to provide a centralized management for changing the behavior of the network
+while it is operating.  This service should use an https endpoint so that it is
+authenticated to the subscribers.  The subscribers can run without
+configuration, having just this address and authentication for the services
+they request.</p>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-03-06 00:56:52 -0800
+Last updated 2021-03-10 07:43:02 -0800
 </div>
 </div>
 </body>
