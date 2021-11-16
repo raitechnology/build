@@ -779,10 +779,9 @@ any node.
 
 Each message can then be authenticated to be published from the node using
 *user1.NONCE* as the session prefix and using the *HA1* hash as the key in a
-*HMAC* with the subject and message data resulting in the *HA2* hash.
+*HMAC* with the subject and message data resulting in the *digest* hash.
 
-  HA2 = HASH( IV = seqno, MSG = subject + message-data )
-  digest = HMAC( K = HA1, MSG = HA2 )
+  digest = HMAC( K = HA1, MSG = subject + message-data  )
 
 The result is a *HMAC* authenticated message:
 
@@ -804,24 +803,21 @@ When the subscriber recieves this message, it is verified by:
     computed to *HA1* using the session's *NONCE* and that can be used to
     verify the *digest*.
 
-  - The *digest* can be recomputed using *HA0*, *HA1* and *HA2* by:
+  - The *digest* can be recomputed using *HA0*, *HA1* by:
   
   HA0 = node_database[ user1.service1 ]
   HA1 = SHA256( HA0 + NONCE )
-  HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
-  hmac-result = HMAC_AES( K = HA1, MSG = HA2 )
+  digest = HMAC( HA1, MSG = subject + message-data  )
 
 To authenticate the message came from *user1.service1*, compare *hmac-result*
-with *digest* in the message.  Since *HA2* is a property of the message, it can
-be used to encode the *HMAC* for other transport endpoints.  *HA1* is a hash of
-*HA0* and a *NONCE* which is unique to the session endpoint for *user1*, it can
-be computed when the session starts.
+with *digest* in the message.  *HA1* is a hash of *HA0* and a *NONCE* which is
+unique to the session endpoint for *user1*, it can be computed when the session
+starts.
 
 A *HA1* hash can be computed and cached with the transport when more messages
 are expected to be published from the same session.  This reduces the cost of
-authentication to a *AES_HASH* of the message data and a *HMAC_AES* digest
-computation, and both can be accelerated using *AES* instructions built into
-the CPU.
+authentication to a hash of the message data and a *HMAC* digest computation,
+and both can be accelerated using *AES* instructions built into the CPU.
 
 This authentication from a publisher can only be trusted after a trust exchange
 between each subscriber and pubisher, since an attacker can replay old messages
@@ -840,6 +836,7 @@ bonds:
     ucast_url : pgm://host:port,
     time : utc_usecs,
     interval : secs,
+    challenge : HMAC-SHA256
     cnonce : CNONCE
   }
 
@@ -850,8 +847,7 @@ and *publisher1*, creating a trust bond from *publisher1* to *newuser1*.
 
   HA0 = SHA256( publisher1 + service1 + password )
   HA1 = SHA256( HA0 + NONCE + utc_usecs + CNONCE )
-  HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
-  auth_digest = HMAC_AES( K = HA1, MSG = HA2 )
+  auth_digest = HMAC( HA1, MSG = subject + message-data )
 
 This is the message that *publisher1* uses to validate itself to *newuser1*:
 
@@ -861,7 +857,9 @@ This is the message that *publisher1* uses to validate itself to *newuser1*:
     digest : auth_digest,
     auth_time : utc_usecs,
     time : utc_usecs,
+    challenge : HMAC-SHA256
     cnonce : CNONCE
+    auth_stage : 1
   }
 
 The *auth_time* is the time that the *_SESSION.HELLO* was sent so that the
@@ -876,8 +874,7 @@ sent from *publisher1.NONCE*, via the *time* and the *CNONCE* fields from
 
   HA0 = SHA256( newuser1 + service1 + password )
   HA1 = SHA256( HA0 + NONCE + utc_usecs + CNONCE )
-  HA2 = AES_HASH( IV = seqno, MSG = subject + message-data )
-  auth_digest = HMAC_AES( K = HA1, MSG = HA2 )
+  auth_digest = HMAC( HA1, MSG = subject + message-data )
 
   _INBOX.publisher1.NONCE.auth : {
     session : newuser1.NONCE,
@@ -885,13 +882,31 @@ sent from *publisher1.NONCE*, via the *time* and the *CNONCE* fields from
     digest : auth_digest,
     auth_time : utc_usecs,
     time : utc_usecs,
+    challenge : HMAC-SHA256
     cnonce : CNONCE
+    auth_stage : 2
   }
 
 After this exchange, the *newuser1* adds the *publisher1.NONCE* to the trusted
-list and *publisher1* adds *newuser1.NONCE*.  It is critical that *NONCE* uses
-enough entropy and bits to be unique through the lifetime of the network to
-protect from replays.
+list and *publisher1* adds *newuser1.NONCE*.  The final reply is to let the
+*newuser1* that *publisher1* successfully authenticated the instance
+*newuser1.NONCE*:
+
+  _INBOX.newuser1.NONCE.auth : {
+    session : publisher1.NONCE,
+    seqno : sequence,
+    digest : auth_digest,
+    auth_time : utc_usecs,
+    auth_stage : 3
+  }
+
+This uses the same auth_digest calculation as the first message, so the
+*CNONCE* used is from that message.  That is keyed at the time the original
+auth was sent, indicated by the *auth_time*.
+
+The *challenge* parameter determines how the authenticator should compute
+the digest.  A *HMAC-SHA256* is with a shared private key.  Other
+authentication, such as Eliptic Curve public/private key exchange are planned.
 
 If an old message is replayed:
 
@@ -955,7 +970,7 @@ Optional header fields:
 | 4 | pattern | 5 | prefix | 6 | wildcard | 7 | time
 | 8 | last_seen | 9 | query | 10 | interval | 11 | cnonce
 | 12 | format | 13 | dictionary | 14 | dict_csum | 15 | expires
-| 16 | subs_array | 17 | subs_return | 18 | url | 19 | entitlements
+| 16 | subs_array | 17 | subs_return | 18 | ucast_url | 19 | entitlements
 | 20 | entitle_csum | 21 | ack_start | 22 | ack_stop | 23 | initial
 |====
 
@@ -1190,10 +1205,10 @@ all of the subscriptions are reasserted.
     wildcard : >,
     initial : true,
     ack : true,
-    subs : [
+    array_subs : [
       subject1, subject2, ...
     ],
-    subs_return : [
+    ret_subs : [
       1, 2
     ]
   }
@@ -1227,6 +1242,33 @@ The value returned would be a *snapshot* value:
     data : {
       <msg data>
     }
+  }
+
+Redis Request
+~~~~~~~~~~~~~
+
+A *Redis* command and response is a type of snapshot where the subject is
+routed to an instance database shard name or number.
+
+  _REDIS.1 : {
+    session : sam.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    return : 1,
+    format : json,
+    command : "hgetall key"
+  }
+
+The reply is the result of executing the *command* against *database* 1.
+
+  _INBOX.sam.NONCE.1 : {
+    session : paul.NONCE,
+    seqno : sequence,
+    digest : digest_bits,
+    type : snap,
+    database : 1,
+    format : json,
+    data : [ "field1", "value1", "field2", "value2" ]
   }
 
 Update Messaging
