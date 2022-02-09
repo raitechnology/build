@@ -16,11 +16,11 @@ build: links
 	make -C natsmd
 	make -C natsrv
 	make -C raims
-
 #	make -C raipgm
 #	make -C aeron
 #	make -C aekv
 #	make -C aerv
+
 .PHONY: sync
 sync: links
 	rsync -auv --exclude='.*.sw*' openpgm/	      ${SYNC_DIR}/openpgm
@@ -39,7 +39,6 @@ sync: links
 	rsync -auv --exclude='.*.sw*' natsrv/         ${SYNC_DIR}/natsrv
 	rsync -auv --exclude='.*.sw*' benchmark/      ${SYNC_DIR}/benchmark
 	rsync -auv --exclude='.*.sw*' raims/          ${SYNC_DIR}/raims
-
 #	rsync -auv --exclude='.*.sw*' raipgm/         ${SYNC_DIR}/raipgm
 #	rsync -auv --exclude='.*.sw*' aeron/          ${SYNC_DIR}/aeron
 #	rsync -auv --exclude='.*.sw*' aekv/           ${SYNC_DIR}/aekv
@@ -158,6 +157,7 @@ update_submodules: dirs
 	(cd raims && git update-index --cacheinfo 160000 `cd ../linecook && git rev-parse HEAD` linecook)
 	(cd raims && git update-index --cacheinfo 160000 `cd ../openpgm && git rev-parse rai` openpgm)
 	(cd raims && git update-index --cacheinfo 160000 `cd ../sassrv && git rev-parse HEAD` sassrv)
+	(cd raims && git update-index --cacheinfo 160000 `cd ../natsmd && git rev-parse HEAD` natsmd)
 
 #	(cd raipgm && git update-index --cacheinfo 160000 `cd ../openpgm && git rev-parse rai` openpgm)
 #	(cd raipgm && git update-index --cacheinfo 160000 `cd ../HdrHistogram_c && git rev-parse rai` HdrHistogram_c)
@@ -281,6 +281,8 @@ links:
 	ln -s -f ../openpgm raims/openpgm
 	rmdir raims/sassrv
 	ln -s -f ../sassrv raims/sassrv
+	rmdir raims/natsmd
+	ln -s -f ../natsmd raims/natsmd
 	rm -f dirs
 	touch links
 
@@ -349,6 +351,8 @@ dirs:
 	mkdir raims/openpgm
 	rm -f -d raims/sassrv
 	mkdir raims/sassrv
+	rm -f -d raims/natsmd
+	mkdir raims/natsmd
 	rm -f -d links
 	touch dirs
 
