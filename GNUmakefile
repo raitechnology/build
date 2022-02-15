@@ -21,6 +21,10 @@ build: links
 #	make -C aekv
 #	make -C aerv
 
+.PHONY: install_rpm_deps
+install_rpm_deps:
+	sudo yum install -y gcc-c++ chrpath pcre2-devel openssl-devel git-core liblzf-devel systemd
+
 .PHONY: sync
 sync: links
 	rsync -auv --exclude='.*.sw*' openpgm/	      ${SYNC_DIR}/openpgm
