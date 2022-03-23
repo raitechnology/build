@@ -28,6 +28,7 @@ install_rpm_deps:
 .PHONY: sync
 sync: links
 	rsync -auv --exclude='.*.sw*' openpgm/	      ${SYNC_DIR}/openpgm
+	rsync -auv --exclude='.*.sw*' pcre2/	      ${SYNC_DIR}/pcre2
 	rsync -auv --exclude='.*.sw*' raikv/	      ${SYNC_DIR}/raikv
 	rsync -auv --exclude='.*.sw*' libdecnumber/   ${SYNC_DIR}/libdecnumber
 	rsync -auv --exclude='.*.sw*' raimd/	      ${SYNC_DIR}/raimd
@@ -50,6 +51,7 @@ sync: links
 .PHONY: clone
 clone:
 	git clone -b rai https://github.com/raitechnology/openpgm
+	git clone https://github.com/PhilipHazel/pcre2
 	git clone https://github.com/raitechnology/raikv
 	git clone https://github.com/raitechnology/libdecnumber
 	git clone https://github.com/raitechnology/raimd
@@ -95,6 +97,7 @@ push: dirs
 .PHONY: pull
 pull: dirs
 	(cd openpgm && git pull origin)
+	(cd pcre2 && git pull origin)
 	(cd raikv && git pull origin)
 	(cd libdecnumber && git pull origin)
 	(cd raimd && git pull origin)
@@ -211,9 +214,11 @@ commit: dirs
 #	if [ -n "`cd aeron && git status --porcelain`" ] ; then cd aeron && git commit -a ${MSG} ; fi
 #	if [ -n "`cd aekv && git status --porcelain`" ] ; then cd aekv && git commit -a ${MSG} ; fi
 #	if [ -n "`cd aerv && git status --porcelain`" ] ; then cd aerv && git commit -a ${MSG} ; fi
+
 .PHONY: clean
 clean: dirs
 	rm -r -f openpgm
+	rm -r -f pcre2
 	rm -r -f raikv
 	rm -r -f libdecnumber
 	rm -r -f raimd
@@ -234,59 +239,85 @@ clean: dirs
 #	rm -r -f aeron
 #	rm -r -f aekv
 #	rm -r -f aerv
+
+.PHONY: cmake
+cmake: links
+	mkdir -p pcre2/build
+	(cd pcre2/build && cmake .. -DPCRE2_BUILD_PCRE2_32=ON && cmake --build .)
+	mkdir -p libdecnumber/build
+	(cd libdecnumber/build && cmake .. && cmake --build .)
+	mkdir -p raimd/build
+	(cd raimd/build && cmake .. && cmake --build .)
+	mkdir -p raikv/build
+	(cd raikv/build && cmake .. && cmake --build .)
+	mkdir -p sassrv/build
+	(cd sassrv/build && cmake .. && cmake --build .)
+
 links:
-	rmdir capr/raikv
+	rm -d -f raikv/pcre2
+	ln -s -f ../pcre2 raikv/pcre2
+	rm -d -f capr/raikv
 	ln -s -f ../raikv capr/raikv
-	rmdir capr/raimd
+	rm -d -f capr/raimd
 	ln -s -f ../raimd capr/raimd
-	rmdir HdrHistogram_c/test/vendor/google/benchmark
+	rm -d -f capr/pcre2
+	ln -s -f ../pcre2 capr/pcre2
+	rm -d -f HdrHistogram_c/test/vendor/google/benchmark
 	ln -s -f ../../../../benchmark HdrHistogram_c/test/vendor/google/benchmark
-	rmdir natsmd/raikv
+	rm -d -f natsmd/raikv
 	ln -s -f ../raikv natsmd/raikv
-	rmdir natsmd/raimd
+	rm -d -f natsmd/raimd
 	ln -s -f ../raimd natsmd/raimd
-	rmdir natsmd/HdrHistogram_c
+	rm -d -f natsmd/HdrHistogram_c
 	ln -s -f ../HdrHistogram_c natsmd/HdrHistogram_c
-	rmdir natsrv/sassrv
+	rm -d -f natsmd/pcre2
+	ln -s -f ../pcre2 natsmd/pcre2
+	rm -d -f natsrv/sassrv
 	ln -s -f ../sassrv natsrv/sassrv
-	rmdir natsrv/natsmd
+	rm -d -f natsrv/natsmd
 	ln -s -f ../natsmd natsrv/natsmd
-	rmdir raids/raikv
+	rm -d -f raids/raikv
 	ln -s -f ../raikv raids/raikv
-	rmdir raids/h3
+	rm -d -f raids/h3
 	ln -s -f ../h3 raids/h3
-	rmdir raids/linecook
+	rm -d -f raids/linecook
 	ln -s -f ../linecook raids/linecook
-	rmdir raids/raimd
+	rm -d -f raids/raimd
 	ln -s -f ../raimd raids/raimd
-	rmdir raids/rdbparser
+	rm -d -f raids/rdbparser
 	ln -s -f ../rdbparser raids/rdbparser
-	rmdir raimd/libdecnumber
+	rm -d -f raids/pcre2
+	ln -s -f ../pcre2 raids/pcre2
+	rm -d -f raimd/libdecnumber
 	ln -s -f ../libdecnumber raimd/libdecnumber
-	rmdir raist/raikv
+	rm -d -f raist/raikv
 	ln -s -f ../raikv raist/raikv
-	rmdir raist/raimd
+	rm -d -f raist/raimd
 	ln -s -f ../raimd raist/raimd
-	rmdir sassrv/raikv
+	rm -d -f sassrv/raikv
 	ln -s -f ../raikv sassrv/raikv
-	rmdir sassrv/raimd
+	rm -d -f sassrv/raimd
 	ln -s -f ../raimd sassrv/raimd
-	rmdir sassrv/HdrHistogram_c
+	rm -d -f sassrv/HdrHistogram_c
 	ln -s -f ../HdrHistogram_c sassrv/HdrHistogram_c
-	rmdir raims/raikv
+	rm -d -f sassrv/pcre2
+	ln -s -f ../pcre2 sassrv/pcre2
+	rm -d -f raims/raikv
 	ln -s -f ../raikv raims/raikv
-	rmdir raims/raimd
+	rm -d -f raims/raimd
 	ln -s -f ../raimd raims/raimd
-	rmdir raims/raids
+	rm -d -f raims/raids
 	ln -s -f ../raids raims/raids
-	rmdir raims/linecook
+	rm -d -f raims/linecook
 	ln -s -f ../linecook raims/linecook
-	rmdir raims/openpgm
+	rm -d -f raims/openpgm
 	ln -s -f ../openpgm raims/openpgm
-	rmdir raims/sassrv
+	rm -d -f raims/sassrv
 	ln -s -f ../sassrv raims/sassrv
-	rmdir raims/natsmd
+	rm -d -f raims/natsmd
 	ln -s -f ../natsmd raims/natsmd
+	rm -d -f raims/pcre2
+	ln -s -f ../pcre2 raims/pcre2
 	rm -f dirs
 	touch links
 
@@ -305,10 +336,14 @@ links:
 #	rmdir aerv/aekv
 #	ln -s -f ../aekv aerv/aekv
 dirs:
+	rm -f -d raikv/pcre2
+	mkdir raikv/pcre2
 	rm -f -d capr/raikv
 	mkdir capr/raikv
 	rm -f -d capr/raimd
 	mkdir capr/raimd
+	rm -f -d capr/pcre2
+	mkdir capr/pcre2
 	rm -f -d HdrHistogram_c/test/vendor/google/benchmark
 	mkdir HdrHistogram_c/test/vendor/google/benchmark
 	rm -f -d natsmd/raikv
@@ -317,6 +352,8 @@ dirs:
 	mkdir natsmd/raimd
 	rm -f -d natsmd/HdrHistogram_c
 	mkdir natsmd/HdrHistogram_c
+	rm -f -d natsmd/pcre2
+	mkdir natsmd/pcre2
 	rm -f -d natsrv/natsmd
 	mkdir natsrv/natsmd
 	rm -f -d natsrv/sassrv
@@ -331,6 +368,8 @@ dirs:
 	mkdir raids/raimd
 	rm -f -d raids/rdbparser
 	mkdir raids/rdbparser
+	rm -f -d raids/pcre2
+	mkdir raids/pcre2
 	rm -f -d raimd/libdecnumber
 	mkdir raimd/libdecnumber
 	rm -f -d raist/raimd
@@ -343,6 +382,8 @@ dirs:
 	mkdir sassrv/raimd
 	rm -f -d sassrv/HdrHistogram_c
 	mkdir sassrv/HdrHistogram_c
+	rm -f -d sassrv/pcre2
+	mkdir sassrv/pcre2
 	rm -f -d raims/raimd
 	mkdir raims/raimd
 	rm -f -d raims/raikv
@@ -357,6 +398,8 @@ dirs:
 	mkdir raims/sassrv
 	rm -f -d raims/natsmd
 	mkdir raims/natsmd
+	rm -f -d raims/pcre2
+	mkdir raims/pcre2
 	rm -f -d links
 	touch dirs
 
