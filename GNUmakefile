@@ -6,6 +6,7 @@ build: links
 	make -C libdecnumber
 	make -C raimd
 	make -C linecook
+	make -C lzf
 	make -C rdbparser
 	make -C h3
 	make -C raist
@@ -33,6 +34,7 @@ sync: links
 	rsync -auv --exclude='.*.sw*' libdecnumber/   ${SYNC_DIR}/libdecnumber
 	rsync -auv --exclude='.*.sw*' raimd/	      ${SYNC_DIR}/raimd
 	rsync -auv --exclude='.*.sw*' linecook/	      ${SYNC_DIR}/linecook
+	rsync -auv --exclude='.*.sw*' lzf/            ${SYNC_DIR}/lzf
 	rsync -auv --exclude='.*.sw*' rdbparser/      ${SYNC_DIR}/rdbparser
 	rsync -auv --exclude='.*.sw*' h3/             ${SYNC_DIR}/h3
 	rsync -auv --exclude='.*.sw*' raist/          ${SYNC_DIR}/raist
@@ -56,6 +58,7 @@ clone:
 	git clone https://github.com/raitechnology/libdecnumber
 	git clone https://github.com/raitechnology/raimd
 	git clone https://github.com/injinj/linecook
+	git clone https://github.com/injinj/lzf
 	git clone https://github.com/injinj/rdbparser
 	git clone https://github.com/raitechnology/h3
 	git clone https://github.com/raitechnology/raist
@@ -79,6 +82,7 @@ push: dirs
 	(cd libdecnumber && git push origin)
 	(cd raimd && git push origin)
 	(cd linecook && git push origin)
+	(cd lzf && git push origin)
 	(cd rdbparser && git push origin)
 	(cd h3 && git push origin)
 	(cd raist && git push origin)
@@ -102,6 +106,7 @@ pull: dirs
 	(cd libdecnumber && git pull origin)
 	(cd raimd && git pull origin)
 	(cd linecook && git pull origin)
+	(cd lzf && git pull origin)
 	(cd rdbparser && git pull origin)
 	(cd h3 && git pull origin)
 	(cd raist && git pull origin)
@@ -124,6 +129,7 @@ status: dirs
 	@if [ -n "`cd libdecnumber && git status --porcelain`" ] ; then echo "---> libdecnumber <---"; cd libdecnumber && git status ; fi
 	@if [ -n "`cd raimd && git status --porcelain`" ] ; then echo "---> raimd <---"; cd raimd && git status ; fi
 	@if [ -n "`cd linecook && git status --porcelain`" ] ; then echo "---> linecook <---"; cd linecook && git status ; fi
+	@if [ -n "`cd lzf && git status --porcelain`" ] ; then echo "---> lzf <---"; cd lzf && git status ; fi
 	@if [ -n "`cd rdbparser && git status --porcelain`" ] ; then echo "---> rdbparser <---"; cd rdbparser && git status ; fi
 	@if [ -n "`cd h3 && git status --porcelain`" ] ; then echo "---> h3 <---"; cd h3 && git status ; fi
 	@if [ -n "`cd raist && git status --porcelain`" ] ; then echo "---> raist <---"; cd raist && git status ; fi
@@ -157,7 +163,6 @@ update_submodules: dirs
 	(cd raist && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
 	(cd sassrv && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
 	(cd sassrv && git update-index --cacheinfo 160000 `cd ../raimd && git rev-parse HEAD` raimd)
-	(cd sassrv && git update-index --cacheinfo 160000 `cd ../HdrHistogram_c && git rev-parse rai` HdrHistogram_c)
 	(cd raims && git update-index --cacheinfo 160000 `cd ../raikv && git rev-parse HEAD` raikv)
 	(cd raims && git update-index --cacheinfo 160000 `cd ../raimd && git rev-parse HEAD` raimd)
 	(cd raims && git update-index --cacheinfo 160000 `cd ../raids && git rev-parse HEAD` raids)
@@ -178,6 +183,7 @@ bump: dirs
 	if [ -n "`cd libdecnumber && git status --porcelain`" ] ; then sh ./script/bump.sh libdecnumber/.copr/Makefile build_num ; fi
 	if [ -n "`cd raimd && git status --porcelain`" ] ; then sh ./script/bump.sh raimd/.copr/Makefile build_num ; fi
 	if [ -n "`cd linecook && git status --porcelain`" ] ; then sh ./script/bump.sh linecook/.copr/Makefile build_num ; fi
+	if [ -n "`cd lzf && git status --porcelain`" ] ; then sh ./script/bump.sh lzf/.copr/Makefile build_num ; fi
 	if [ -n "`cd rdbparser && git status --porcelain`" ] ; then sh ./script/bump.sh rdbparser/.copr/Makefile build_num ; fi
 	if [ -n "`cd h3 && git status --porcelain`" ] ; then sh ./script/bump.sh h3/.copr/Makefile build_num ; fi
 	if [ -n "`cd raist && git status --porcelain`" ] ; then sh ./script/bump.sh raist/.copr/Makefile build_num ; fi
@@ -199,6 +205,7 @@ commit: dirs
 	if [ -n "`cd libdecnumber && git status --porcelain`" ] ; then cd libdecnumber && git commit -a ${MSG} ; fi
 	if [ -n "`cd raimd && git status --porcelain`" ] ; then cd raimd && git commit -a ${MSG} ; fi
 	if [ -n "`cd linecook && git status --porcelain`" ] ; then cd linecook && git commit -a ${MSG} ; fi
+	if [ -n "`cd lzf && git status --porcelain`" ] ; then cd lzf && git commit -a ${MSG} ; fi
 	if [ -n "`cd rdbparser && git status --porcelain`" ] ; then cd rdbparser && git commit -a ${MSG} ; fi
 	if [ -n "`cd h3 && git status --porcelain`" ] ; then cd h3 && git commit -a ${MSG} ; fi
 	if [ -n "`cd raist && git status --porcelain`" ] ; then cd raist && git commit -a ${MSG} ; fi
@@ -223,6 +230,7 @@ clean: dirs
 	rm -r -f libdecnumber
 	rm -r -f raimd
 	rm -r -f linecook
+	rm -r -f lzf
 	rm -r -f rdbparser
 	rm -r -f h3
 	rm -r -f raist
@@ -252,6 +260,20 @@ cmake: links
 	(cd raikv/build && cmake .. && cmake --build .)
 	mkdir -p sassrv/build
 	(cd sassrv/build && cmake .. && cmake --build .)
+	mkdir -p natsmd/build
+	(cd natsmd/build && cmake .. && cmake --build .)
+	mkdir -p capr/build
+	(cd capr/build && cmake .. && cmake --build .)
+	mkdir -p lzf/build
+	(cd lzf/build && cmake .. && cmake --build .)
+	mkdir -p rdbparser/build
+	(cd rdbparser/build && cmake .. && cmake --build .)
+	mkdir -p linecook/build
+	(cd linecook/build && cmake .. && cmake --build .)
+	mkdir -p openpgm/build
+	(cd openpgm/build && cmake .. && cmake --build .)
+	mkdir -p h3/build
+	(cd h3/build && cmake .. && cmake --build .)
 
 links:
 	rm -d -f raikv/pcre2
@@ -276,6 +298,8 @@ links:
 	ln -s -f ../sassrv natsrv/sassrv
 	rm -d -f natsrv/natsmd
 	ln -s -f ../natsmd natsrv/natsmd
+	rm -d -f natsrv/HdrHistogram_c
+	ln -s -f ../HdrHistogram_c natsrv/HdrHistogram_c
 	rm -d -f raids/raikv
 	ln -s -f ../raikv raids/raikv
 	rm -d -f raids/h3
@@ -298,8 +322,6 @@ links:
 	ln -s -f ../raikv sassrv/raikv
 	rm -d -f sassrv/raimd
 	ln -s -f ../raimd sassrv/raimd
-	rm -d -f sassrv/HdrHistogram_c
-	ln -s -f ../HdrHistogram_c sassrv/HdrHistogram_c
 	rm -d -f sassrv/pcre2
 	ln -s -f ../pcre2 sassrv/pcre2
 	rm -d -f raims/raikv
@@ -318,6 +340,12 @@ links:
 	ln -s -f ../natsmd raims/natsmd
 	rm -d -f raims/pcre2
 	ln -s -f ../pcre2 raims/pcre2
+	rm -d -f rdbparser/lzf
+	ln -s -f ../lzf rdbparser/lzf
+	rm -d -f rdbparser/pcre2
+	ln -s -f ../pcre2 rdbparser/pcre2
+	rm -d -f linecook/pcre2
+	ln -s -f ../pcre2 linecook/pcre2
 	rm -f dirs
 	touch links
 
@@ -358,6 +386,8 @@ dirs:
 	mkdir natsrv/natsmd
 	rm -f -d natsrv/sassrv
 	mkdir natsrv/sassrv
+	rm -f -d natsrv/HdrHistogram_c
+	mkdir natsrv/HdrHistogram_c
 	rm -f -d raids/raikv
 	mkdir raids/raikv
 	rm -f -d raids/h3
@@ -380,8 +410,6 @@ dirs:
 	mkdir sassrv/raikv
 	rm -f -d sassrv/raimd
 	mkdir sassrv/raimd
-	rm -f -d sassrv/HdrHistogram_c
-	mkdir sassrv/HdrHistogram_c
 	rm -f -d sassrv/pcre2
 	mkdir sassrv/pcre2
 	rm -f -d raims/raimd
@@ -400,6 +428,12 @@ dirs:
 	mkdir raims/natsmd
 	rm -f -d raims/pcre2
 	mkdir raims/pcre2
+	rm -f -d rdbparser/lzf
+	mkdir rdbparser/lzf
+	rm -f -d rdbparser/pcre2
+	mkdir rdbparser/pcre2
+	rm -f -d linecook/pcre2
+	mkdir linecook/pcre2
 	rm -f -d links
 	touch dirs
 
