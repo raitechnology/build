@@ -50,6 +50,32 @@ sync: links
 #	rsync -auv --exclude='.*.sw*' aeron/          ${SYNC_DIR}/aeron
 #	rsync -auv --exclude='.*.sw*' aekv/           ${SYNC_DIR}/aekv
 #	rsync -auv --exclude='.*.sw*' aerv/           ${SYNC_DIR}/aerv
+.PHONY: sync_src
+sync_src: links
+	rsync -auv --exclude='.*.sw*' raikv/src/      ${SYNC_DIR}/raikv/src
+	rsync -auv --exclude='.*.sw*' raikv/test/     ${SYNC_DIR}/raikv/test
+	rsync -auv --exclude='.*.sw*' raikv/include/  ${SYNC_DIR}/raikv/include
+	rsync -auv --exclude='.*.sw*' raikv/.copr/    ${SYNC_DIR}/raikv/.copr
+	rsync -auv --exclude='.*.sw*' raimd/src/      ${SYNC_DIR}/raimd/src
+	rsync -auv --exclude='.*.sw*' raimd/test/     ${SYNC_DIR}/raimd/test
+	rsync -auv --exclude='.*.sw*' raimd/include/  ${SYNC_DIR}/raimd/include
+	rsync -auv --exclude='.*.sw*' raimd/.copr/    ${SYNC_DIR}/raimd/.copr
+	rsync -auv --exclude='.*.sw*' sassrv/src/     ${SYNC_DIR}/sassrv/src
+	rsync -auv --exclude='.*.sw*' sassrv/include/ ${SYNC_DIR}/sassrv/include
+	rsync -auv --exclude='.*.sw*' sassrv/.copr/   ${SYNC_DIR}/sassrv/.copr
+	rsync -auv --exclude='.*.sw*' raids/src/      ${SYNC_DIR}/raids/src
+	rsync -auv --exclude='.*.sw*' raids/test/     ${SYNC_DIR}/raids/test
+	rsync -auv --exclude='.*.sw*' raids/include/  ${SYNC_DIR}/raids/include
+	rsync -auv --exclude='.*.sw*' raids/.copr/    ${SYNC_DIR}/raids/.copr
+	rsync -auv --exclude='.*.sw*' natsmd/src/     ${SYNC_DIR}/natsmd/src
+	rsync -auv --exclude='.*.sw*' natsmd/test/    ${SYNC_DIR}/natsmd/test
+	rsync -auv --exclude='.*.sw*' natsmd/include/ ${SYNC_DIR}/natsmd/include
+	rsync -auv --exclude='.*.sw*' natsmd/.copr/   ${SYNC_DIR}/natsmd/.copr
+	rsync -auv --exclude='.*.sw*' raims/src/      ${SYNC_DIR}/raims/src
+	rsync -auv --exclude='.*.sw*' raims/test/     ${SYNC_DIR}/raims/test
+	rsync -auv --exclude='.*.sw*' raims/include/  ${SYNC_DIR}/raims/include
+	rsync -auv --exclude='.*.sw*' raims/web/      ${SYNC_DIR}/raims/web
+	rsync -auv --exclude='.*.sw*' raims/.copr/    ${SYNC_DIR}/raims/.copr
 .PHONY: clone
 clone:
 	git clone -b rai https://github.com/raitechnology/openpgm
