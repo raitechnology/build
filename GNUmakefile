@@ -24,28 +24,28 @@ build: links
 
 .PHONY: install_rpm_deps
 install_rpm_deps:
-	sudo yum install -y gcc-c++ chrpath pcre2-devel openssl-devel git-core liblzf-devel systemd
+	sudo yum install -y gcc-c++ chrpath pcre2-devel openssl-devel git-core liblzf-devel systemd c-ares-devel
 
 .PHONY: sync
 sync: links
-	rsync -auv --exclude='.*.sw*' openpgm/	      ${SYNC_DIR}/openpgm
-	rsync -auv --exclude='.*.sw*' pcre2/	      ${SYNC_DIR}/pcre2
-	rsync -auv --exclude='.*.sw*' raikv/	      ${SYNC_DIR}/raikv
-	rsync -auv --exclude='.*.sw*' libdecnumber/   ${SYNC_DIR}/libdecnumber
-	rsync -auv --exclude='.*.sw*' raimd/	      ${SYNC_DIR}/raimd
-	rsync -auv --exclude='.*.sw*' linecook/	      ${SYNC_DIR}/linecook
-	rsync -auv --exclude='.*.sw*' lzf/            ${SYNC_DIR}/lzf
-	rsync -auv --exclude='.*.sw*' rdbparser/      ${SYNC_DIR}/rdbparser
-	rsync -auv --exclude='.*.sw*' h3/             ${SYNC_DIR}/h3
-	rsync -auv --exclude='.*.sw*' raist/          ${SYNC_DIR}/raist
-	rsync -auv --exclude='.*.sw*' HdrHistogram_c/ ${SYNC_DIR}/HdrHistogram_c
-	rsync -auv --exclude='.*.sw*' sassrv/         ${SYNC_DIR}/sassrv
-	rsync -auv --exclude='.*.sw*' raids/          ${SYNC_DIR}/raids
-	rsync -auv --exclude='.*.sw*' capr/           ${SYNC_DIR}/capr
-	rsync -auv --exclude='.*.sw*' natsmd/         ${SYNC_DIR}/natsmd
-	rsync -auv --exclude='.*.sw*' natsrv/         ${SYNC_DIR}/natsrv
-	rsync -auv --exclude='.*.sw*' benchmark/      ${SYNC_DIR}/benchmark
-	rsync -auv --exclude='.*.sw*' raims/          ${SYNC_DIR}/raims
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' openpgm/	      ${SYNC_DIR}/openpgm
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' pcre2/	      ${SYNC_DIR}/pcre2
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' raikv/	      ${SYNC_DIR}/raikv
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' libdecnumber/   ${SYNC_DIR}/libdecnumber
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' raimd/	      ${SYNC_DIR}/raimd
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' linecook/	      ${SYNC_DIR}/linecook
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' lzf/            ${SYNC_DIR}/lzf
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' rdbparser/      ${SYNC_DIR}/rdbparser
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' h3/             ${SYNC_DIR}/h3
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' raist/          ${SYNC_DIR}/raist
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' HdrHistogram_c/ ${SYNC_DIR}/HdrHistogram_c
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' sassrv/         ${SYNC_DIR}/sassrv
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' raids/          ${SYNC_DIR}/raids
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' capr/           ${SYNC_DIR}/capr
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' natsmd/         ${SYNC_DIR}/natsmd
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' natsrv/         ${SYNC_DIR}/natsrv
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' benchmark/      ${SYNC_DIR}/benchmark
+	rsync -auv --exclude='.*.sw*' --exclude='FC*' raims/          ${SYNC_DIR}/raims
 #	rsync -auv --exclude='.*.sw*' raipgm/         ${SYNC_DIR}/raipgm
 #	rsync -auv --exclude='.*.sw*' aeron/          ${SYNC_DIR}/aeron
 #	rsync -auv --exclude='.*.sw*' aekv/           ${SYNC_DIR}/aekv
