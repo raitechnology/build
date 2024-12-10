@@ -18,4 +18,5 @@ add_subdirectory (openpgm)
 add_subdirectory (h3)
 add_subdirectory (raids)
 add_subdirectory (raims)
+add_subdirectory (omm)
 

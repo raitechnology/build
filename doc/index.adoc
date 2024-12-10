@@ -12,24 +12,21 @@ There is at least one package
 link:https://fedoraproject.org/wiki/EPEL[EPEL repo], so that may also be needed
 for RedHat Enterprise / CentOS based distributions.
 
-The RPM files here are built from their github clones.
+The RPM files here are built from their github clones on link:https://copr.fedorainfracloud.org/coprs/injinj/rel/[copr].
 
-- link:https://github.com/raitechnology/raikv[Rai KV], a shared memory key
+- link:https://github.com/injinj/raims[Rai MS], a link state router for
+  multicast services (package: raims)
+
+- link:https://github.com/injinj/raikv[Rai KV], a shared memory key
   value store (package: raikv)
 
-- link:https://github.com/raitechnology/raids[Rai DS], distribution services,
+- link:https://github.com/injinj/raids[Rai DS], distribution services,
   including Redis, Memcached, Http, WebSocket, DS API (package: raids)
 
-- link:https://github.com/raitechnology/raimd[Rai MD], market data codecs,
+- link:https://github.com/injinj/raimd[Rai MD], market data codecs,
   including TIB/SASS, Marketfeed, RV, RWF, Json, Dictinaries (package: raimd)
 
-- link:https://github.com/raitechnology/natsmd[NATS MD], NATS protocol bridge
-  (package: natsmd)
-
-- link:https://github.com/raitechnology/natsrv[NATS RV], RV to NATS protocol
-  bridge (package: natsrv)
-
-- link:https://github.com/raitechnology/natsrv[SASS RV], RV protocol bridge
+- link:https://github.com/injinj/sassrv[SASS RV], RV protocol bridge
   (package: sassrv)
 
 - other packages that are dependencies of the above, the `git submodule`
@@ -40,11 +37,8 @@ Installing
 
 Download one of the following repo files and install it to `/etc/yum.repos.d/`.
 
-- CentOS 7 / RHEL 7, link:raitechnology_epel-7-x86_64.repo[raitechnology_epel-7-x86_64.repo]
-- CentOS 8 / RHEL 8, link:raitechnology_epel-8-x86_64.repo[raitechnology_epel-8-x86_64.repo]
-- Fedora 32, link:raitechnology_fedora-32-x86_64.repo[raitechnology_fedora-32-x86_64.repo]
-- Fedora 33, link:raitechnology_fedora-33-x86_64.repo[raitechnology_fedora-33-x86_64.repo]
-- Fedora 34, link:raitechnology_fedora-34-x86_64.repo[raitechnology_fedora-34-x86_64.repo]
+- RedHat 7,8,9,etc, link:raitechnology_epel-x86_64.repo[raitechnology_epel-x86_64.repo]
+- Fedora 39,40,41,etc, link:raitechnology_fedora-x86_64.repo[raitechnology_fedora-x86_64.repo]
 
 Then use `yum` or `dnf` to install packages.
 
@@ -56,100 +50,10 @@ which has several dependencies.  These are resolved, then the GPG public key
 used to verify the RPMs, is imported by `yum`.
 
 ----
-$ sudo curl -s https://www.raitechnology.com/repo/raitechnology_epel-7-x86_64.repo -o \
-/etc/yum.repos.d/raitechnology_epel-7-x86_64.repo
+$ sudo curl -s https://www.raitechnology.com/repo/raitechnology_epel-x86_64.repo -o \
+/etc/yum.repos.d/raitechnology_epel-x86_64.repo
 
-$ sudo yum install raids                                                                                                                              
-Loaded plugins: fastestmirror
-Loading mirror speeds from cached hostfile
- * base: mirror.sfo12.us.leaseweb.net
- * epel: sjc.edge.kernel.org
- * extras: mirror.sfo12.us.leaseweb.net
- * updates: mirror.hostduplex.com
-Resolving Dependencies
---> Running transaction check
----> Package raids.x86_64 0:1.2.0-40.el7 will be installed
---> Processing Dependency: h3 for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: liblzf for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: raikv for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: raimd for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: rdbparser for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: libh3.so.3.6()(64bit) for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: liblzf.so.1()(64bit) for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: libraikv.so.1.9()(64bit) for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: libraimd.so.1.2()(64bit) for package: raids-1.2.0-40.el7.x86_64
---> Processing Dependency: librdbparser.so.1.0()(64bit) for package: raids-1.2.0-40.el7.x86_64
---> Running transaction check
----> Package h3.x86_64 0:3.6.3-5.el7 will be installed
----> Package liblzf.x86_64 0:3.6-7.el7 will be installed
----> Package raikv.x86_64 0:1.9.0-73.el7 will be installed
----> Package raimd.x86_64 0:1.2.0-17.el7 will be installed
----> Package rdbparser.x86_64 0:1.0.0-3.el7 will be installed
---> Finished Dependency Resolution
-
-Dependencies Resolved
-
-============================================================================
- Package           Arch        Version           Repository         Size
-============================================================================
-Installing:
- raids             x86_64      1.2.0-40.el7      raitechnology      893 k
-Installing for dependencies:
- h3                x86_64      3.6.3-5.el7       raitechnology      61 k
- liblzf            x86_64      3.6-7.el7         epel               22 k
- raikv             x86_64      1.9.0-73.el7      raitechnology      475 k
- raimd             x86_64      1.2.0-17.el7      raitechnology      196 k
- rdbparser         x86_64      1.0.0-3.el7       raitechnology      55 k
-
-Transaction Summary
-============================================================================
-Install  1 Package (+5 Dependent packages)
-
-Total download size: 1.7 M
-Installed size: 16 M
-Is this ok [y/d/N]: y
-Downloading packages:
-(1/6): h3-3.6.3-5.el7.x86_64.rpm                          |  61 kB  00:00:00
-(2/6): raikv-1.9.0-73.el7.x86_64.rpm                      | 475 kB  00:00:00
-(3/6): raimd-1.2.0-17.el7.x86_64.rpm                      | 196 kB  00:00:00
-(4/6): rdbparser-1.0.0-3.el7.x86_64.rpm                   |  55 kB  00:00:00
-(5/6): liblzf-3.6-7.el7.x86_64.rpm                        |  22 kB  00:00:00
-(6/6): raids-1.2.0-40.el7.x86_64.rpm                      | 893 kB  00:00:00
- ---------------------------------------------------------------------------
-Total                                            6.6 MB/s | 1.7 MB  00:00:00     
-Retrieving key from https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology
-Importing GPG key 0x7110B2D1:
- Userid     : "Rai Technology <chris@raitechnology.com>"
- Fingerprint: a2cc b37e 25e7 0d29 cd92 8b9f 532d f184 7110 b2d1
- From       : https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology
-Is this ok [y/N]: y
-Running transaction check
-Running transaction test
-Transaction test succeeded
-Running transaction
-Warning: RPMDB altered outside of yum.
-  Installing : liblzf-3.6-7.el7.x86_64                    1/6 
-  Installing : rdbparser-1.0.0-3.el7.x86_64               2/6 
-  Installing : h3-3.6.3-5.el7.x86_64                      3/6 
-  Installing : raimd-1.2.0-17.el7.x86_64                  4/6 
-  Installing : raikv-1.9.0-73.el7.x86_64                  5/6 
-  Installing : raids-1.2.0-40.el7.x86_64                  6/6 
-  Verifying  : raikv-1.9.0-73.el7.x86_64                  1/6 
-  Verifying  : raimd-1.2.0-17.el7.x86_64                  2/6 
-  Verifying  : raids-1.2.0-40.el7.x86_64                  3/6 
-  Verifying  : liblzf-3.6-7.el7.x86_64                    4/6 
-  Verifying  : rdbparser-1.0.0-3.el7.x86_64               5/6 
-  Verifying  : h3-3.6.3-5.el7.x86_64                      6/6 
-
-Installed:
-  raids.x86_64 0:1.2.0-40.el7                                                                                                                              
-
-Dependency Installed:
-  h3.x86_64 0:3.6.3-5.el7        liblzf.x86_64 0:3.6-7.el7
-  raikv.x86_64 0:1.9.0-73.el7    raimd.x86_64 0:1.2.0-17.el7
-  rdbparser.x86_64 0:1.0.0-3.el7   
-
-Complete!
+$ sudo yum install raims
 ----
 
 Description
@@ -157,15 +61,16 @@ Description
 
 The RPM installers, *yum* or *dnf* can be used when the repo file is
 installed.  This file usually lives in a well known directory
-`/etc/yum.repos.d/raitechnology_epel-7-x86_64.repo` and needs two links:
+`/etc/yum.repos.d/raitechnology_epel-x86_64.repo` and needs two links:
 
 1.  The RPM directory contains the rpm files:
 
-- link:epel-7-x86_64[epel-7-x86_64] -- CentOS 7 / RHEL 7
-- link:epel-8-x86_64[epel-8-x86_64] -- CentOS 8 / RHEL 8
-- link:fedora-32-x86_64[fedora-32-x86_64] -- Fedora 32
-- link:fedora-33-x86_64[fedora-32-x86_64] -- Fedora 33
-- link:fedora-34-x86_64[fedora-32-x86_64] -- Fedora 34
+- link:epel-7-x86_64[epel-7-x86_64] -- RHEL 7
+- link:epel-8-x86_64[epel-8-x86_64] -- RHEL 8
+- link:epel-9-x86_64[epel-9-x86_64] -- RHEL 9
+- link:fedora-39-x86_64[fedora-39-x86_64] -- Fedora 39
+- link:fedora-40-x86_64[fedora-40-x86_64] -- Fedora 40
+- link:fedora-41-x86_64[fedora-41-x86_64] -- Fedora 41
 
 2.  The GPG public key used to verify the package file:
 
@@ -175,8 +80,8 @@ The contents of the repo file contains these links, and looks like this:
 
 ----
 [raitechnology]
-name=Rai Technology epel-7-x86_64
-baseurl=https://www.raitechnology.com/repo/epel-7-x86_64
+name=Rai Technology epel-$releasever-x86_64
+baseurl=https://www.raitechnology.com/repo/epel-$releasever-x86_64
 enabled=1
 gpgcheck=1
 gpgkey=https://www.raitechnology.com/repo/RPM-GPG-KEY-raitechnology
