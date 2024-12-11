@@ -19,7 +19,7 @@ build:
 
 .PHONY: install_rpm_deps
 install_rpm_deps:
-	sudo yum install -y gcc-c++ chrpath pcre2-devel openssl-devel git-core liblzf-devel systemd c-ares-devel
+	sudo yum install -y gcc-c++ chrpath pcre2-devel openssl-devel git-core liblzf-devel systemd c-ares-devel zlib-devel rpm-build
 
 .PHONY: sync
 sync:

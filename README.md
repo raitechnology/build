@@ -8,6 +8,7 @@ and linked without regard to the submodules.
 ```console
 $ git clone https://github.com/raitechnology/build
 $ cd build
+$ make install_rpm_deps
 $ make clone
 $ make
 ```
