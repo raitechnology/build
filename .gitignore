@@ -69,3 +69,11 @@ core.[0-9]?*
 # bear make output
 /compile_commands.json
 /.*history
+# rel/dev: scripts and README are tracked; downloaded chroots and the
+# copr listing down.sh writes are not (re-creatable, ~24 GB)
+/rel/*-x86_64
+/dev/*-x86_64
+/rel/pkgs.json
+/dev/pkgs.json
+# nuget: sleet feed is a build product (published to www); config + script tracked
+/nuget/feed

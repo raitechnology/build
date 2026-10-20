@@ -1,0 +1,12 @@
+{
+  "username": "",
+  "useremail": "",
+  "sources": [
+    {
+      "name": "www",
+      "type": "local",
+      "path": "/home/chris/injinj/nuget/feed",
+      "baseURI": "https://www.raitechnology.com/nuget/"
+    }
+  ]
+}
