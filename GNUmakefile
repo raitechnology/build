@@ -36,6 +36,7 @@ clone:
 
 .PHONY: status
 status:
+	@printf "    %16s [%10s  ]: %6s | %6s | %6s\n" "repo" "branch" "changed" "untrack" "unpushd"
 	@for dir in $(repos); do \
 		branch=$$(git -C "$$dir" symbolic-ref --quiet --short HEAD \
 			|| git -C "$$dir" rev-parse --short HEAD) || exit 1; \
@@ -45,8 +46,10 @@ status:
 			-v repo="$$dir" -v branch="$$branch" -v unpushed="$$unpushed" \
 			'/^\?\?/ { untracked++; next } \
 			 { changed++ } \
-			 END { printf "%s %16s [%10s  ]: %d changed, %d untracked, %d unpushed\n", \
-			              (changed || untracked || unpushed ? ">" : " "), \
+			 END { printf "%s%s%s %16s [%10s  ]: %7d | %7d | %7d\n", \
+			              (untracked ? "?" : " "), \
+			              (changed ? "+" : " "), \
+			              (unpushed ? ">" : " "), \
 			              repo, branch, changed, untracked, unpushed }'; \
 	done
 
@@ -58,8 +61,8 @@ update_build_depends: d/raimd.dep d/raikv.dep d/h3.dep d/linecook.dep d/rdbparse
 	@cat d/raikv.dep d/raimd.dep d/libdecnumber.dep > sassrv/build_depends.mak
 	@cat d/openpgm.dep d/sassrv.dep d/natsmd.dep d/raids.dep d/raikv.dep d/h3.dep d/linecook.dep d/raimd.dep d/rdbparser.dep d/libdecnumber.dep > raims/build_depends.mak
 	@cat d/sassrv.dep d/raikv.dep d/raimd.dep d/libdecnumber.dep > omm/build_depends.mak
-	@cat d/sassrv.dep d/raikv.dep d/raimd.dep d/libdecnumber.dep d/omm.dep > rvcache/build_depends.mak
-	@cat d/sassrv.dep d/raikv.dep d/raimd.dep d/libdecnumber.dep d/omm.dep > raimdapi/build_depends.mak
+	@cat d/sassrv.dep d/raikv.dep d/raimd.dep d/libdecnumber.dep d/omm.dep d/natsmd.dep > rvcache/build_depends.mak
+	@cat d/sassrv.dep d/raikv.dep d/raimd.dep d/libdecnumber.dep d/omm.dep d/natsmd.dep > raimdapi/build_depends.mak
 	@cat d/raikv.dep d/raimd.dep d/libdecnumber.dep d/omm.dep > ossl/build_depends.mak
 
 d/raimd.dep: raimd/.copr/Makefile

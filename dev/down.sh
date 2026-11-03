@@ -51,38 +51,43 @@ rpm_ok()
   grep -q "BAD" <<< "$out" && return 1
   grep -q "digest: OK" <<< "$out" && return 0
   rpm -qp --qf '%{NAME}' "$f" > /dev/null 2>&1 || return 1
-  len=$(curl -sI --retry 3 "$url" | tr -d '\r' | awk 'tolower($1)=="content-length:" {print $2}')
+  # -L: pulp-stored rpms redirect (copr -> packages.redhat.com -> s3); the last
+  # content-length is the file's, the earlier ones are the redirect bodies
+  len=$(curl -sIL --retry 3 "$url" | tr -d '\r' | awk 'tolower($1)=="content-length:" {l=$2} END {print l}')
   [ -n "$len" ] && [ "$len" = "$(stat -c %s "$f")" ]
 }
 
+# The expected rpms come from copr's API, not from the build's result dir:
+# since the project moved to pulp storage (Nov 2026) that dir holds only logs
+# and results.json, and each rpm URL there 301s to pulp.  The API's NEVRA list
+# and per-chroot result_url work for both backend- and pulp-stored builds.
+copr_api=https://copr.fedorainfracloud.org/api_3
 fetch_missing()
 {
-  local id=$1 rc=0 c url f files
-  local base_url=https://download.copr.fedorainfracloud.org/results/injinj/$base
+  local id=$1 rc=0 c url f files code bp bc
   local pkg=$(jq -r --argjson id $id '.[] | select(.latest_build.id == $id) | .name' < pkgs.json)
+  bp=$(curl -sf --retry 3 "$copr_api/build/built-packages/$id") || { echo "ERROR: cannot get built packages of build $id" >&2 ; return 1 ; }
+  bc=$(curl -sf --retry 3 "$copr_api/build-chroot/list?build_id=$id") || { echo "ERROR: cannot get chroots of build $id" >&2 ; return 1 ; }
   for c in $(jq -r --argjson id $id '.[] | select(.latest_build.id == $id) | .latest_build.chroots[]' < pkgs.json) ; do
     [ "$c" = "fedora-rawhide-x86_64" ] && continue
     mkdir -p "$c"
-    url=$base_url/$c/$id-$pkg/
-    # copr's directory listing uses single-quoted hrefs; accept either quote style
-    listing=$(curl -sf --retry 3 "$url") || { echo "ERROR: cannot fetch listing $url" >&2 ; rc=1 ; continue ; }
-    files=$(grep -oE "href=[\"'][^\"']*\.rpm[\"']" <<< "$listing" | sed "s/^href=[\"']//;s/[\"']\$//" | sort -u)
-    if [ -z "$files" ] ; then
-      # copr's prunerepo has emptied this build dir (only logs/'success' left):
-      # the rpms no longer exist anywhere on copr, a rebuild is the only fix.
-      # not fatal: what is already here is still good, sign it.
-      if grep -q "href=[\"']success[\"']" <<< "$listing" ; then
-        echo "WARN: $pkg build $id results pruned on copr ($c): rebuild it, e.g. copr-cli build-package --name $pkg injinj/$base" >&2
-      else
-        echo "ERROR: no rpms listed at $url (format changed?)" >&2 ; rc=1
-      fi
-      continue
+    url=$(jq -r --arg c "$c" '.items[] | select(.name == $c) | .result_url // empty' <<< "$bc")
+    files=$(jq -r --arg c "$c" '.[$c].packages[]? | "\(.name)-\(.version)-\(.release).\(.arch).rpm"' <<< "$bp" | sort -u)
+    if [ -z "$url" ] || [ -z "$files" ] ; then
+      echo "ERROR: copr lists no result url or rpms for build $id ($c)" >&2 ; rc=1 ; continue
     fi
     for f in $files ; do
       if [ ! -s "$c/$f" ] ; then
         echo "missing $c/$f, fetching"
-        if ! curl -sf --retry 5 --retry-all-errors -o "$c/$f" "$url$f" ; then
-          echo "ERROR: could not download $url$f" >&2 ; rm -f "$c/$f" ; rc=1 ; continue
+        code=$(curl -sL --retry 5 --retry-all-errors -o "$c/$f" -w '%{http_code}' "$url$f")
+        if [ "$code" = 404 ] ; then
+          # the build exists but its rpms are gone (prunerepo emptied an old
+          # backend dir): a rebuild is the only fix.  not fatal: what is
+          # already here is still good, sign it.
+          echo "WARN: $url$f is gone from copr: rebuild it, e.g. copr-cli build-package --name $pkg injinj/$base" >&2
+          rm -f "$c/$f" ; continue
+        elif [ "$code" != 200 ] || [ ! -s "$c/$f" ] ; then
+          echo "ERROR: could not download $url$f (http $code)" >&2 ; rm -f "$c/$f" ; rc=1 ; continue
         fi
       fi
       # catch truncated files: header+payload digest check, no signature needed;
@@ -90,7 +95,7 @@ fetch_missing()
       if ! rpm_ok "$c/$f" "$url$f" ; then
         echo "$c/$f fails digest check (truncated?), re-fetching"
         rm -f "$c/$f"
-        curl -sf --retry 5 --retry-all-errors -o "$c/$f" "$url$f"
+        curl -sfL --retry 5 --retry-all-errors -o "$c/$f" "$url$f"
         if ! rpm_ok "$c/$f" "$url$f" ; then
           echo "ERROR: $c/$f still bad after re-fetch, removing" >&2 ; rm -f "$c/$f" ; rc=1
         fi
