@@ -3,11 +3,31 @@ repos = openpgm raikv libdecnumber raimd linecook lzf rdbparser h3 HdrHistogram_
 
 .PHONY: build
 build:
-	for i in $(repos) ; do make -j 4 -C $$i ; done
+	for i in $(repos) ; do if ! make -j 4 -C $$i ; then break ; fi ; done
 
 .PHONY: install_rpm_deps
 install_rpm_deps:
-	sudo yum install -y gcc-c++ chrpath pcre2-devel openssl-devel git-core git-extras liblzf-devel systemd c-ares-devel zlib-devel rpm-build
+	sudo yum install -y gcc-c++ chrpath pcre2-devel openssl-devel git-core git-extras liblzf-devel systemd c-ares-devel zlib-devel rpm-build java-devel
+
+# Debian/Ubuntu equivalent of install_rpm_deps, package names mapped 1:1
+# from what the rpm/*.spec BuildRequires lists actually need:
+#   gcc-c++       -> g++ (build-essential brings gcc/make/libc-dev with it)
+#   pcre2-devel   -> libpcre2-dev
+#   openssl-devel -> libssl-dev
+#   liblzf-devel  -> liblzf-dev
+#   c-ares-devel  -> libc-ares-dev
+#   zlib-devel    -> zlib1g-dev
+#   git-core      -> git
+#   rpm-build     -> devscripts + dpkg-dev (debuild/dpkg-buildpackage, the
+#                    Debian-side equivalent of rpmbuild) + lintian, which
+#                    the dist_dpkg targets in every repo's GNUmakefile run
+#                    automatically at the end of a build
+# systemd is intentionally omitted: nothing in this tree's dist_dpkg builds
+# has actually needed it as a build-time package on Debian.
+.PHONY: install_dpkg_deps
+install_dpkg_deps:
+	sudo apt-get update
+	sudo apt-get install -y build-essential g++ chrpath libpcre2-dev libssl-dev git git-extras liblzf-dev libc-ares-dev zlib1g-dev devscripts debhelper dpkg-dev lintian default-jdk
 
 .PHONY: sync
 sync:
@@ -36,21 +56,23 @@ clone:
 
 .PHONY: status
 status:
-	@printf "    %16s [%10s  ]: %6s | %6s | %6s\n" "repo" "branch" "changed" "untrack" "unpushd"
+	@printf "    %16s [%10s  ]: %6s | %6s | %6s | %s\n" "repo" "branch" "changed" "untrack" "unpushd" "version"
 	@for dir in $(repos); do \
+                version=$$(make -s -C $$dir spec_build 2> /dev/null | sed 's/[a-z_0-9]* := //') \
 		branch=$$(git -C "$$dir" symbolic-ref --quiet --short HEAD \
 			|| git -C "$$dir" rev-parse --short HEAD) || exit 1; \
 		unpushed=$$(git -C "$$dir" rev-list --count HEAD \
 			--not --remotes=origin) || exit 1; \
 		git -C "$$dir" status --porcelain=v1 -uall | awk \
 			-v repo="$$dir" -v branch="$$branch" -v unpushed="$$unpushed" \
+                        -v version="$$version" \
 			'/^\?\?/ { untracked++; next } \
 			 { changed++ } \
-			 END { printf "%s%s%s %16s [%10s  ]: %7d | %7d | %7d\n", \
+			 END { printf "%s%s%s %16s [%10s  ]: %7d | %7d | %7d | %7s\n", \
 			              (untracked ? "?" : " "), \
 			              (changed ? "+" : " "), \
 			              (unpushed ? ">" : " "), \
-			              repo, branch, changed, untracked, unpushed }'; \
+			              repo, branch, changed, untracked, unpushed, version }'; \
 	done
 
 .PHONY: update_build_depends
