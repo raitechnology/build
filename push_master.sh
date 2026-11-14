@@ -1,6 +1,7 @@
 
 master=master
 pull=0
+fetch=0
 
 opt=${1:?usage: $0 [-p pull] repo}
 case $opt in
@@ -8,9 +9,13 @@ case $opt in
   pull=1
   shift
   ;;
+  -f)
+  fetch=1
+  shift
+  ;;
 esac
 
-name=${1:?usage: $0 [-p pull] repo}
+name=${1:?usage: $0 [-p pull] [-f fetch] repo}
 
 case ${name} in
   openpgm)
@@ -64,9 +69,12 @@ cd $name
 build=$(sed -n 's/^[[:space:]]*build_num[[:space:]]*:=[[:space:]]*\([0-9][0-9]*\)[[:space:]]*$/\1/p' .copr/Makefile)
 
 if [ "${pull}" = "1" ] ; then
-  build_num=$(($build + 1))
-  git pull origin build_${build_num}
   git pull origin ${master}
+  build=$(sed -n 's/^[[:space:]]*build_num[[:space:]]*:=[[:space:]]*\([0-9][0-9]*\)[[:space:]]*$/\1/p' .copr/Makefile)
+  fetch=1
+fi
+if [ "${fetch}" = "1" ] ; then
+  git fetch origin build_${build}:build_${build}
   exit 0
 fi
 
