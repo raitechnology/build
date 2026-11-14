@@ -1,47 +1,77 @@
 
-case ${1} in
+master=master
+pull=0
+
+opt=${1:?usage: $0 [-p pull] repo}
+case $opt in
+  -p)
+  pull=1
+  shift
+  ;;
+esac
+
+name=${1:?usage: $0 [-p pull] repo}
+
+case ${name} in
+  openpgm)
+  master=rai
+  ;;
+  libdecnumber)
+  ;;
+  linecook)
+  ;;
+  rdbparser)
+  ;;
+  h3)
+  ;;
+  lzf)
+  ;;
+  HdrHistogram_c)
+  master=rai
+  ;;
   raimd)
-  m=master
   ;;
   raikv)
-  m=master
   ;;
   sassrv)
-  m=master
   ;;
   raids)
-  m=master
   ;;
   natsmd)
-  m=master
   ;;
   raims)
-  m=master
   ;;
   omm)
-  m=main
-  ;;
-  rvcache)
-  m=main
+  master=main
   ;;
   raimdapi)
-  m=master
   ;;
   ossl)
-  m=main
+  master=main
+  ;;
+  rvcache)
+  master=main
   ;;
   *)
-  echo "arg1: raimd, raikv, sassrv, raids, natsmd, raims, omm, rvcache, raimdapi, ossl"
+  echo "arg1: raikv, sassrv, raids, natsmd, raims, raimd, omm, ossl, rvcache"
   exit 1
 esac
 
-make dirs
-cd $1
+#make dirs
+cd $name
 #git checkout master
 #git merge dev
-build_num=$(sed -n 's/^[[:space:]]*build_num[[:space:]]*:=[[:space:]]*\([0-9][0-9]*\)[[:space:]]*$/\1/p' .copr/Makefile)
+build=$(sed -n 's/^[[:space:]]*build_num[[:space:]]*:=[[:space:]]*\([0-9][0-9]*\)[[:space:]]*$/\1/p' .copr/Makefile)
+
+if [ "${pull}" = "1" ] ; then
+  build_num=$(($build + 1))
+  git pull origin build_${build_num}
+  git pull origin ${master}
+  exit 0
+fi
+
 git commit -a
-git push origin $m
-git push ii $m
-git push origin build_${build_num}
-git push ii $m build_${build_num}
+git push origin ${master}
+git push ii ${master}
+git push origin build_${build}
+git push ii build_${build}
